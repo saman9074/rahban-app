@@ -59,7 +59,7 @@ class MyApp extends StatelessWidget {
       ],
       child: Builder(
         builder: (context) {
-          final router = AppRouter(context.watch<AuthController>()).router;
+          final router = AppRouter(context.watch<AuthController>()).createRouter(context);
           return MaterialApp.router(
             title: 'Rahban',
             debugShowCheckedModeBanner: false,

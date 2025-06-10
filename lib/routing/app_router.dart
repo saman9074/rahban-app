@@ -16,8 +16,6 @@ import '../main.dart';
 class AppRouter {
   final AuthController authController;
 
-  late final GoRouter router;
-
   AppRouter(this.authController);
 
   GoRouter createRouter(BuildContext context) {
@@ -32,13 +30,11 @@ class AppRouter {
         final isAuth = state.matchedLocation == '/login' || state.matchedLocation == '/register';
         final isLoggedIn = authState == AuthState.authenticated;
 
-        // اگر Splash هنوز نمایش داده نشده، اجازه ورود به صفحات دیگه نیست
         if (!appState.splashShown) {
           if (!isSplash) return '/splash';
           return null;
         }
 
-        // بعد از نمایش Splash:
         if (isSplash && appState.splashShown) {
           return isLoggedIn ? '/home' : '/login';
         }
@@ -52,7 +48,6 @@ class AppRouter {
         GoRoute(
           path: '/splash',
           builder: (context, state) {
-            // کنترل markSplashShown رو به SplashScreen منتقل میکنیم تا یکبار اجرا بشه
             return SplashScreen(
               onInitializationComplete: () {
                 Provider.of<AppState>(context, listen: false).markSplashShown();
