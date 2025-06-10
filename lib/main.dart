@@ -12,10 +12,24 @@ import 'package:rahban/features/history/presentation/history_controller.dart';
 import 'package:rahban/features/profile/presentation/profile_controller.dart';
 import 'package:rahban/features/trip/presentation/trip_controller.dart';
 import 'package:rahban/routing/app_router.dart';
+import 'package:camera/camera.dart';
+
+List<CameraDescription> cameras = [];
 
 void main() async {
+  // --- pubspec.yaml ---
+  // flutter:
+  //   uses-material-design: true
+  //   assets:
+  //     - assets/images/  <- Add this line
+
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('fa_IR', null);
+  try {
+    cameras = await availableCameras();
+  } on CameraException catch (e) {
+    print('Error in fetching the cameras: $e');
+  }
   runApp(const MyApp());
 }
 
@@ -30,7 +44,6 @@ class MyApp extends StatelessWidget {
         Provider<TripRepository>(create: (_) => TripRepository()),
         Provider<UserRepository>(create: (_) => UserRepository()),
         Provider<GuardianRepository>(create: (_) => GuardianRepository()),
-
         ChangeNotifierProvider<AuthController>(
           create: (context) => AuthController(context.read<AuthRepository>())..checkAuthenticationStatus(),
         ),
@@ -53,7 +66,7 @@ class MyApp extends StatelessWidget {
           return MaterialApp.router(
             title: 'Rahban',
             debugShowCheckedModeBanner: false,
-            theme: ThemeData( // Theme Data remains the same
+            theme: ThemeData(
               primarySwatch: Colors.teal,
               scaffoldBackgroundColor: Colors.grey[50],
               textTheme: GoogleFonts.vazirmatnTextTheme(Theme.of(context).textTheme).apply(bodyColor: Colors.grey[800], displayColor: Colors.black87),
