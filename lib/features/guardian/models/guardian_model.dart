@@ -13,9 +13,10 @@ class Guardian {
 
   factory Guardian.fromJson(Map<String, dynamic> json) {
     return Guardian(
-      id: json['id'],
-      name: json['name'],
-      phoneNumber: json['phone_number'],
+      // **تغییر:** مدیریت حالتی که id به صورت رشته یا عدد باشد
+      id: int.tryParse(json['id'].toString()) ?? 0,
+      name: json['name'] ?? '',
+      phoneNumber: json['phone_number'] ?? '',
       isDefault: json['is_default'] ?? false,
     );
   }

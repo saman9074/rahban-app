@@ -1,6 +1,4 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -33,12 +31,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
     _animationController.forward();
 
-    Timer(const Duration(seconds: 3), () {
-      if (mounted) {
-        // پس از ۳ ثانیه، به صفحه‌ای می‌رویم که منطق ریدایرکت اصلی را فعال کند
-        context.go('/login');
-      }
-    });
+    // **تغییر:** تایمر حذف شد، منطق به مسیریاب منتقل شد
   }
 
   @override
@@ -50,7 +43,8 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.teal[800],
+      // **تغییر:** پس‌زمینه به سفید تغییر کرد
+      backgroundColor: Colors.white,
       body: Center(
         child: FadeTransition(
           opacity: _fadeAnimation,
@@ -59,27 +53,21 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // لوگوی شما
-                Image.asset(
-                  'assets/images/rahban.png',
-                  width: 150,
-                  height: 150,
-                ),
+                Image.asset('assets/images/rahban.png', width: 150, height: 150),
                 const SizedBox(height: 24),
-                // نام اپلیکیشن
                 Text(
                   'رهبان',
                   style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                    color: Colors.white,
+                    // **تغییر:** رنگ متن برای خوانایی روی پس‌زمینه سفید
+                    color: Colors.teal[900],
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 8),
-                // شعار اپلیکیشن
                 Text(
                   '«سفر کن، ما مراقبیم.»',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Colors.teal[100],
+                    color: Colors.grey[600],
                   ),
                 ),
               ],
