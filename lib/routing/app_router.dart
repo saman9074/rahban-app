@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:rahban/features/auth/presentation/auth_controller.dart';
 import 'package:rahban/features/auth/presentation/login_screen.dart';
 import 'package:rahban/features/auth/presentation/register_screen.dart';
@@ -10,85 +11,68 @@ import 'package:rahban/features/profile/presentation/profile_screen.dart';
 import 'package:rahban/features/splash/splash_screen.dart';
 import 'package:rahban/features/trip/presentation/start_trip_screen.dart';
 
+import '../main.dart';
+
 class AppRouter {
   final AuthController authController;
+
   late final GoRouter router;
 
-  AppRouter(this.authController) {
-    router = GoRouter(
-      refreshListenable: authController,
+  AppRouter(this.authController);
+
+  GoRouter createRouter(BuildContext context) {
+    final appState = Provider.of<AppState>(context, listen: false);
+
+    return GoRouter(
       initialLocation: '/splash',
-      routes: [
-        GoRoute(
-          path: '/splash',
-          builder: (context, state) => const SplashScreen(),
-        ),
-        GoRoute(
-          path: '/login',
-          builder: (context, state) => const LoginScreen(),
-        ),
-        GoRoute(
-          path: '/register',
-          builder: (context, state) => const RegisterScreen(),
-        ),
-        ShellRoute(
-          builder: (context, state, child) {
-            return Scaffold(
-              body: child,
-            );
-          },
-          routes: [
-            GoRoute(
-              path: '/home',
-              builder: (context, state) => const HomeScreen(),
-            ),
-            GoRoute(
-              path: '/start-trip',
-              builder: (context, state) => const StartTripScreen(),
-            ),
-            GoRoute(
-              path: '/profile',
-              builder: (context, state) => const ProfileScreen(),
-            ),
-            GoRoute(
-              path: '/history',
-              builder: (context, state) => const HistoryScreen(),
-            ),
-            GoRoute(
-              path: '/guardians',
-              builder: (context, state) => const GuardianScreen(),
-            ),
-          ],
-        ),
-      ],
-      redirect: (BuildContext context, GoRouterState state) {
+      refreshListenable: authController,
+      redirect: (context, state) {
         final authState = authController.authState;
-        final onSplash = state.matchedLocation == '/splash';
-        final onAuthRoute =
-            state.matchedLocation == '/login' || state.matchedLocation == '/register';
-
-        if (authState == AuthState.unknown) {
-          // اجازه میدیم Splash نمایش داده بشه
-          return onSplash ? null : '/splash';
-        }
-
+        final isSplash = state.matchedLocation == '/splash';
+        final isAuth = state.matchedLocation == '/login' || state.matchedLocation == '/register';
         final isLoggedIn = authState == AuthState.authenticated;
 
-        if (onSplash) {
-          // اجازه میدیم Splash نمایش داده بشه بدون ریدایرکت خودکار
+        // اگر Splash هنوز نمایش داده نشده، اجازه ورود به صفحات دیگه نیست
+        if (!appState.splashShown) {
+          if (!isSplash) return '/splash';
           return null;
         }
 
-        if (!isLoggedIn && !onAuthRoute) {
-          return '/login';
+        // بعد از نمایش Splash:
+        if (isSplash && appState.splashShown) {
+          return isLoggedIn ? '/home' : '/login';
         }
 
-        if (isLoggedIn && onAuthRoute) {
-          return '/home';
-        }
+        if (!isLoggedIn && !isAuth) return '/login';
+        if (isLoggedIn && isAuth) return '/home';
 
         return null;
       },
+      routes: [
+        GoRoute(
+          path: '/splash',
+          builder: (context, state) {
+            // کنترل markSplashShown رو به SplashScreen منتقل میکنیم تا یکبار اجرا بشه
+            return SplashScreen(
+              onInitializationComplete: () {
+                Provider.of<AppState>(context, listen: false).markSplashShown();
+              },
+            );
+          },
+        ),
+        GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
+        GoRoute(path: '/register', builder: (context, state) => const RegisterScreen()),
+        ShellRoute(
+          builder: (context, state, child) => Scaffold(body: child),
+          routes: [
+            GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
+            GoRoute(path: '/profile', builder: (context, state) => const ProfileScreen()),
+            GoRoute(path: '/guardian', builder: (context, state) => const GuardianScreen()),
+            GoRoute(path: '/history', builder: (context, state) => const HistoryScreen()),
+            GoRoute(path: '/trip', builder: (context, state) => const StartTripScreen()),
+          ],
+        ),
+      ],
     );
   }
 }

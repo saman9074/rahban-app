@@ -5,7 +5,9 @@ import 'package:provider/provider.dart';
 import 'package:rahban/features/auth/presentation/auth_controller.dart';
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
+  final VoidCallback? onInitializationComplete;
+
+  const SplashScreen({super.key, this.onInitializationComplete});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -38,11 +40,14 @@ class _SplashScreenState extends State<SplashScreen>
       if (mounted) _animationController.forward();
     });
 
-    // ✅ اینجا هدایت بعد از ۵ ثانیه
     Timer(const Duration(seconds: 5), () {
-      final authState = context.read<AuthController>().authState;
-
       if (!mounted) return;
+
+      // اطلاع دادن به بیرون که اسپلش نمایش داده شده و تموم شده
+      widget.onInitializationComplete?.call();
+
+      // سپس هدایت به صفحه مربوطه
+      final authState = context.read<AuthController>().authState;
 
       if (authState == AuthState.authenticated) {
         context.go('/home');
@@ -81,7 +86,7 @@ class _SplashScreenState extends State<SplashScreen>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'سفر امن، خیال آسوده',
+                  '«سفر کن، ما مراقبیم.»',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: Colors.grey[600],
                   ),
