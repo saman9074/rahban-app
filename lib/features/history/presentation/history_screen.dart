@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:rahban/features/history/presentation/history_controller.dart';
 import 'package:intl/intl.dart' as intl;
 import 'package:rahban/features/history/models/trip_model.dart';
+import 'package:go_router/go_router.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -25,7 +26,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        appBar: AppBar(title: const Text('تاریخچه سفرها')),
+        appBar: AppBar(
+          title: const Text('تاریخچه سفرها'),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => context.pop(), // دکمه بازگشت
+          ),
+        ),
         body: Consumer<HistoryController>(
           builder: (context, controller, child) {
             if (controller.isLoading) return const Center(child: CircularProgressIndicator());

@@ -34,7 +34,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AppState()),
+        //ChangeNotifierProvider(create: (_) => AppState()),
+        Provider<AppState>(create: (_) => AppState()),
         Provider<AuthRepository>(create: (_) => AuthRepository()),
         Provider<TripRepository>(create: (_) => TripRepository()),
         Provider<UserRepository>(create: (_) => UserRepository()),
@@ -87,7 +88,6 @@ class MyApp extends StatelessWidget {
 
 class AppState extends ChangeNotifier {
   bool _splashShown = false;
-
   bool get splashShown => _splashShown;
 
   void markSplashShown() {

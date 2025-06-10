@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:rahban/features/guardian/presentation/guardian_controller.dart';
-import 'package:rahban/features/guardian/models/guardian_model.dart';
 
 class GuardianScreen extends StatefulWidget {
   const GuardianScreen({super.key});
@@ -73,7 +73,13 @@ class _GuardianScreenState extends State<GuardianScreen> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        appBar: AppBar(title: const Text('مدیریت نگهبانان')),
+        appBar: AppBar(
+          title: const Text('مدیریت نگهبانان'),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => context.pop(), // اگر GoRouter داری
+          ),
+        ),
         body: Consumer<GuardianController>(
           builder: (context, controller, child) {
             if (controller.isLoading) return const Center(child: CircularProgressIndicator());

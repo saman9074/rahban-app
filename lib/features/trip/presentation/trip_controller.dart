@@ -25,7 +25,6 @@ class TripController with ChangeNotifier {
   Timer? _backendUpdateTimer;
   StreamSubscription<ServiceStatus>? _serviceStatusStream;
 
-
   bool get isInTrip => _isInTrip;
   String? get activeTripId => _activeTripId;
   LatLng? get currentPosition => _currentPosition;
@@ -35,35 +34,44 @@ class TripController with ChangeNotifier {
 
   void _listenToLocationService() {
     _serviceStatusStream = Geolocator.getServiceStatusStream().listen((ServiceStatus status) {
+      final wasEnabled = _locationServiceEnabled;
       _locationServiceEnabled = status == ServiceStatus.enabled;
-      if (_locationServiceEnabled) {
+
+      if (_locationServiceEnabled && !wasEnabled) {
         initializeLocationService();
       }
+
       notifyListeners();
+    }, onError: (error) {
+      // اگر خطایی در استریم رخ داد می‌توانید اینجا مدیریت کنید
+      print("Error in location service status stream: $error");
     });
   }
 
   Future<void> initializeLocationService() async {
     if (!_isLocationLoading && _currentPosition != null) return;
+    _isLocationLoading = true;
+    notifyListeners();
+
     try {
       final initialPosition = await _determinePosition();
       _currentPosition = LatLng(initialPosition.latitude, initialPosition.longitude);
       _locationError = '';
-      _isLocationLoading = false;
       _startLocationStream();
-      notifyListeners();
     } catch (e) {
       _locationError = e.toString();
+    } finally {
       _isLocationLoading = false;
       notifyListeners();
     }
   }
 
   Future<Position> _determinePosition() async {
-    _locationServiceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!_locationServiceEnabled) {
+    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
       return Future.error('سرویس موقعیت مکانی غیرفعال است.');
     }
+
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
@@ -74,15 +82,22 @@ class TripController with ChangeNotifier {
     if (permission == LocationPermission.deniedForever) {
       return Future.error('دسترسی به موقعیت مکانی برای همیشه رد شده است.');
     }
+
     return await Geolocator.getCurrentPosition();
   }
 
   void _startLocationStream() {
     _positionStreamSubscription?.cancel();
-    _positionStreamSubscription = Geolocator.getPositionStream().listen((Position position) {
-      _currentPosition = LatLng(position.latitude, position.longitude);
-      notifyListeners();
-    });
+    _positionStreamSubscription = Geolocator.getPositionStream().listen(
+          (Position position) {
+        _currentPosition = LatLng(position.latitude, position.longitude);
+        notifyListeners();
+      },
+      onError: (error) {
+        _locationError = error.toString();
+        notifyListeners();
+      },
+    );
   }
 
   Future<void> loadActiveTrip() async {
@@ -105,6 +120,7 @@ class TripController with ChangeNotifier {
 
   Future<void> completeActiveTrip() async {
     if (_activeTripId == null) return;
+
     try {
       await _tripRepository.completeTrip(tripId: _activeTripId!);
     } catch (e) {
@@ -118,16 +134,9 @@ class TripController with ChangeNotifier {
     }
   }
 
-  @override
-  void dispose() {
-    _positionStreamSubscription?.cancel();
-    _backendUpdateTimer?.cancel();
-    _serviceStatusStream?.cancel();
-    super.dispose();
-  }
-
   Future<void> triggerSOS() async {
     if (_activeTripId == null) return;
+
     try {
       if (_currentPosition != null) {
         await _tripRepository.updateLocation(
@@ -144,13 +153,13 @@ class TripController with ChangeNotifier {
 
   void _startBackendUpdates() {
     _backendUpdateTimer?.cancel();
-    _backendUpdateTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+    _backendUpdateTimer = Timer.periodic(const Duration(seconds: 30), (timer) async {
       if (!_isInTrip || _activeTripId == null || _currentPosition == null) {
         timer.cancel();
         return;
       }
       try {
-        _tripRepository.updateLocation(tripId: _activeTripId!, location: _currentPosition!);
+        await _tripRepository.updateLocation(tripId: _activeTripId!, location: _currentPosition!);
         print("Backend Location updated for trip $_activeTripId at ${DateTime.now()}");
       } catch (e) {
         print("Failed to send location update to backend: $e");
@@ -161,5 +170,13 @@ class TripController with ChangeNotifier {
   void _stopBackendUpdates() {
     _backendUpdateTimer?.cancel();
     _backendUpdateTimer = null;
+  }
+
+  @override
+  void dispose() {
+    _positionStreamSubscription?.cancel();
+    _backendUpdateTimer?.cancel();
+    _serviceStatusStream?.cancel();
+    super.dispose();
   }
 }

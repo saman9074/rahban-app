@@ -100,7 +100,13 @@ class _StartTripScreenState extends State<StartTripScreen> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        appBar: AppBar(title: const Text('شروع سفر جدید')),
+        appBar: AppBar(
+            title: const Text('شروع سفر جدید'),
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () => context.pop(), // نیاز به go_router دارد
+            ),
+        ),
         body: Form(
           key: _formKey,
           child: ListView(
