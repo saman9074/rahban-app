@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rahban/features/guardian/presentation/guardian_controller.dart';
+import 'package:rahban/features/guardian/models/guardian_model.dart';
 
 class GuardianScreen extends StatefulWidget {
   const GuardianScreen({super.key});

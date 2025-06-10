@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rahban/features/history/presentation/history_controller.dart';
 import 'package:intl/intl.dart' as intl;
-import 'package:rahban/features/history/models/trip_model.dart'; // Import Trip model
+import 'package:rahban/features/history/models/trip_model.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -29,7 +29,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
         body: Consumer<HistoryController>(
           builder: (context, controller, child) {
             if (controller.isLoading) return const Center(child: CircularProgressIndicator());
-
             if (controller.errorMessage != null) {
               return Center(
                 child: Column(
@@ -45,7 +44,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 ),
               );
             }
-
             if (controller.trips.isEmpty) {
               return const Center(
                 child: Column(
@@ -58,7 +56,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 ),
               );
             }
-
             return RefreshIndicator(
               onRefresh: () => controller.fetchTrips(),
               child: ListView.builder(
@@ -91,9 +88,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       leading: Icon(statusIcon, color: statusColor, size: 40),
                       title: Text('سفر #${trip.id} - $statusText'),
                       subtitle: Text('آغاز: ${a.format(trip.createdAt.toLocal())}'),
-                      onTap: () {
-                        // Navigate to trip detail screen in the future
-                      },
+                      onTap: () {},
                     ),
                   );
                 },

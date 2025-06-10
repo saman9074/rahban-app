@@ -163,4 +163,3 @@ class TripController with ChangeNotifier {
     _backendUpdateTimer = null;
   }
 }
-

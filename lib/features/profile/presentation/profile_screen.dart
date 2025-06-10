@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rahban/features/profile/presentation/profile_controller.dart';
+import 'package:rahban/features/profile/models/user_model.dart';
+
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});

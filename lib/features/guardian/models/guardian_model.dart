@@ -16,7 +16,7 @@ class Guardian {
       id: int.tryParse(json['id'].toString()) ?? 0,
       name: json['name'] ?? '',
       phoneNumber: json['phone_number'] ?? '',
-      isDefault: json['is_default'] ?? false,
+      isDefault: json['is_default'] == true || json['is_default'] == 1,
     );
   }
 
