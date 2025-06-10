@@ -17,12 +17,6 @@ import 'package:camera/camera.dart';
 List<CameraDescription> cameras = [];
 
 void main() async {
-  // --- pubspec.yaml ---
-  // flutter:
-  //   uses-material-design: true
-  //   assets:
-  //     - assets/images/  <- Add this line
-
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('fa_IR', null);
   try {
@@ -44,6 +38,7 @@ class MyApp extends StatelessWidget {
         Provider<TripRepository>(create: (_) => TripRepository()),
         Provider<UserRepository>(create: (_) => UserRepository()),
         Provider<GuardianRepository>(create: (_) => GuardianRepository()),
+
         ChangeNotifierProvider<AuthController>(
           create: (context) => AuthController(context.read<AuthRepository>())..checkAuthenticationStatus(),
         ),

@@ -79,8 +79,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
-
-                // **تغییر:** فرم تغییر رمز عبور اضافه شد
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
@@ -91,43 +89,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         children: [
                           Text('تغییر رمز عبور', style: Theme.of(context).textTheme.titleLarge),
                           const SizedBox(height: 16),
-                          TextFormField(
-                            controller: _currentPasswordController,
-                            decoration: const InputDecoration(labelText: 'رمز عبور فعلی'),
-                            obscureText: true,
-                            validator: (v) => v!.isEmpty ? 'این فیلد الزامی است' : null,
-                          ),
+                          TextFormField(controller: _currentPasswordController, decoration: const InputDecoration(labelText: 'رمز عبور فعلی'), obscureText: true, validator: (v) => v!.isEmpty ? 'این فیلد الزامی است' : null),
                           const SizedBox(height: 12),
-                          TextFormField(
-                            controller: _newPasswordController,
-                            decoration: const InputDecoration(labelText: 'رمز عبور جدید'),
-                            obscureText: true,
-                            validator: (v) {
-                              if (v == null || v.isEmpty) return 'این فیلد الزامی است';
-                              if (v.length < 8) return 'رمز عبور باید حداقل ۸ کاراکتر باشد';
-                              return null;
-                            },
-                          ),
+                          TextFormField(controller: _newPasswordController, decoration: const InputDecoration(labelText: 'رمز عبور جدید'), obscureText: true, validator: (v) {if (v == null || v.isEmpty) return 'این فیلد الزامی است'; if (v.length < 8) return 'رمز عبور باید حداقل ۸ کاراکتر باشد'; return null;}),
                           const SizedBox(height: 12),
-                          TextFormField(
-                            controller: _confirmPasswordController,
-                            decoration: const InputDecoration(labelText: 'تکرار رمز عبور جدید'),
-                            obscureText: true,
-                            validator: (v) {
-                              if (v != _newPasswordController.text) return 'رمزهای عبور یکسان نیستند';
-                              return null;
-                            },
-                          ),
+                          TextFormField(controller: _confirmPasswordController, decoration: const InputDecoration(labelText: 'تکرار رمز عبور جدید'), obscureText: true, validator: (v) {if (v != _newPasswordController.text) return 'رمزهای عبور یکسان نیستند'; return null;}),
                           const SizedBox(height: 24),
-                          _isPasswordLoading
-                              ? const Center(child: CircularProgressIndicator())
-                              : SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                                onPressed: _changePassword,
-                                child: const Text('ثبت تغییرات')
-                            ),
-                          )
+                          _isPasswordLoading ? const Center(child: CircularProgressIndicator()) : SizedBox(width: double.infinity, child: ElevatedButton(onPressed: _changePassword, child: const Text('ثبت تغییرات')))
                         ],
                       ),
                     ),

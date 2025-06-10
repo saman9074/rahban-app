@@ -8,6 +8,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:rahban/features/trip/presentation/trip_controller.dart';
 import 'package:volume_controller/volume_controller.dart';
+import 'package:geolocator/geolocator.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -109,6 +110,37 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 if (tripController.isInTrip) _buildInTripControls(context)
                 else _buildStartTripButton(context, tripController.currentPosition),
+
+                // **تغییر:** نمایش پیام در صورت خاموش بودن GPS
+                if (!tripController.locationServiceEnabled)
+                  Positioned.fill(
+                    child: Container(
+                      color: Colors.black.withOpacity(0.5),
+                      child: Center(
+                        child: Card(
+                          margin: const EdgeInsets.all(32),
+                          child: Padding(
+                            padding: const EdgeInsets.all(24.0),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.location_off, size: 60, color: Colors.red),
+                                const SizedBox(height: 16),
+                                const Text('GPS شما خاموش است!', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                                const SizedBox(height: 8),
+                                const Text('برای استفاده از نقشه، لطفا موقعیت مکانی خود را روشن کنید.', textAlign: TextAlign.center),
+                                const SizedBox(height: 24),
+                                ElevatedButton(
+                                    onPressed: () => Geolocator.openLocationSettings(),
+                                    child: const Text('روشن کردن GPS')
+                                )
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             );
           },
@@ -122,10 +154,10 @@ class _HomeScreenState extends State<HomeScreen> {
     if (tripController.locationError.isNotEmpty) return Center(child: Padding(padding: const EdgeInsets.all(16.0), child: Text('خطا: ${tripController.locationError}', textAlign: TextAlign.center, style: TextStyle(color: Colors.red[700], fontSize: 16))));
 
     return FlutterMap(
+      key: ValueKey(tripController.currentPosition.toString()),
       mapController: _mapController,
       options: MapOptions(initialCenter: tripController.currentPosition ?? const LatLng(35.6892, 51.3890), initialZoom: 15.0),
       children: [
-        // **تغییر نهایی:** استفاده از سرور نقشه Carto برای حل مشکل CORS
         TileLayer(
           urlTemplate: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
           subdomains: const ['a', 'b', 'c', 'd'],

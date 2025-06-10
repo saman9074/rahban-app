@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -29,9 +30,12 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       CurvedAnimation(parent: _animationController, curve: Curves.elasticOut),
     );
 
-    _animationController.forward();
-
-    // **تغییر:** تایمر حذف شد، منطق به مسیریاب منتقل شد
+    // **تغییر:** یک تاخیر کوتاه برای نمایش بهتر اسپلش اضافه شد
+    Timer(const Duration(milliseconds: 500), () {
+      if (mounted) {
+        _animationController.forward();
+      }
+    });
   }
 
   @override
@@ -43,7 +47,6 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // **تغییر:** پس‌زمینه به سفید تغییر کرد
       backgroundColor: Colors.white,
       body: Center(
         child: FadeTransition(
@@ -58,14 +61,13 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                 Text(
                   'رهبان',
                   style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                    // **تغییر:** رنگ متن برای خوانایی روی پس‌زمینه سفید
                     color: Colors.teal[900],
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '«سفر کن، ما مراقبیم.»',
+                  'سفر امن، خیال آسوده',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: Colors.grey[600],
                   ),

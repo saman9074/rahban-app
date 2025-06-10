@@ -18,38 +18,72 @@ class AppRouter {
   AppRouter(this.authController) {
     router = GoRouter(
       refreshListenable: authController,
-      initialLocation: '/splash', // همیشه با اسپلش شروع کن
+      initialLocation: '/splash',
       routes: [
-        GoRoute(path: '/splash', builder: (context, state) => const SplashScreen()),
-        GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
-        GoRoute(path: '/register', builder: (context, state) => const RegisterScreen()),
-        GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
-        GoRoute(path: '/start-trip', builder: (context, state) => const StartTripScreen()),
-        GoRoute(path: '/profile', builder: (context, state) => const ProfileScreen()),
-        GoRoute(path: '/history', builder: (context, state) => const HistoryScreen()),
-        GoRoute(path: '/guardians', builder: (context, state) => const GuardianScreen()),
+        GoRoute(
+          path: '/splash',
+          builder: (context, state) => const SplashScreen(),
+        ),
+        GoRoute(
+          path: '/login',
+          builder: (context, state) => const LoginScreen(),
+        ),
+        GoRoute(
+          path: '/register',
+          builder: (context, state) => const RegisterScreen(),
+        ),
+        // **تغییر:** استفاده از ShellRoute برای مدیریت بهتر صفحات داخلی و دکمه بازگشت
+        ShellRoute(
+          builder: (context, state, child) {
+            return child;
+          },
+          routes: [
+            GoRoute(
+              path: '/home',
+              builder: (context, state) => const HomeScreen(),
+            ),
+            GoRoute(
+              path: '/start-trip',
+              builder: (context, state) => const StartTripScreen(),
+            ),
+            GoRoute(
+              path: '/profile',
+              builder: (context, state) => const ProfileScreen(),
+            ),
+            GoRoute(
+              path: '/history',
+              builder: (context, state) => const HistoryScreen(),
+            ),
+            GoRoute(
+              path: '/guardians',
+              builder: (context, state) => const GuardianScreen(),
+            ),
+          ],
+        ),
       ],
       redirect: (BuildContext context, GoRouterState state) {
-        final loggedIn = authController.authState == AuthState.authenticated;
-        final loggingIn = state.matchedLocation == '/login' || state.matchedLocation == '/register';
+        final authState = authController.authState;
         final onSplash = state.matchedLocation == '/splash';
+        final onAuthRoute = state.matchedLocation == '/login' || state.matchedLocation == '/register';
 
-        // اگر وضعیت احراز هویت در حال بررسی است، در صفحه اسپلش بمان
-        if (authController.authState == AuthState.unknown) {
+        if (authState == AuthState.unknown) {
           return onSplash ? null : '/splash';
         }
 
-        // اگر کاربر لاگین کرده و در صفحات ورود یا اسپلش است، به خانه ببر
-        if (loggedIn && (loggingIn || onSplash)) {
-          return '/home';
+        final isLoggedIn = authState == AuthState.authenticated;
+
+        if (onSplash) {
+          return isLoggedIn ? '/home' : '/login';
         }
 
-        // اگر کاربر لاگین نکرده و در صفحه‌ای غیر از ورود است، به صفحه ورود ببر
-        if (!loggedIn && !loggingIn) {
+        if (!isLoggedIn && !onAuthRoute) {
           return '/login';
         }
 
-        // در غیر این صورت، نیازی به تغییر مسیر نیست
+        if (isLoggedIn && onAuthRoute) {
+          return '/home';
+        }
+
         return null;
       },
     );

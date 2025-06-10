@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rahban/features/history/presentation/history_controller.dart';
 import 'package:intl/intl.dart' as intl;
+import 'package:rahban/features/history/models/trip_model.dart'; // Import Trip model
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -29,7 +30,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
           builder: (context, controller, child) {
             if (controller.isLoading) return const Center(child: CircularProgressIndicator());
 
-            // **تغییر:** مدیریت بهتر حالت خطا
             if (controller.errorMessage != null) {
               return Center(
                 child: Column(
@@ -46,7 +46,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
               );
             }
 
-            // **تغییر:** مدیریت بهتر حالت خالی بودن لیست
             if (controller.trips.isEmpty) {
               return const Center(
                 child: Column(
@@ -76,6 +75,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       statusText = 'تکمیل شده';
                       break;
                     case 'sos':
+                    case 'emergency':
                       statusIcon = Icons.warning_amber_rounded;
                       statusColor = Colors.red;
                       statusText = 'اضطراری';

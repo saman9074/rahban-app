@@ -23,7 +23,7 @@ class _StartTripScreenState extends State<StartTripScreen> {
   final _colorController = TextEditingController();
 
   final List<Guardian> _selectedGuardians = [];
-  XFile? _platePhoto; // **تغییر:** متغیر برای ذخیره عکس
+  XFile? _platePhoto;
   final ImagePicker _picker = ImagePicker();
 
   bool _isLoading = false;
@@ -109,7 +109,6 @@ class _StartTripScreenState extends State<StartTripScreen> {
               Text('اطلاعات خودرو (اختیاری)', style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 16),
 
-              // **تغییر:** بخش جدید برای عکس پلاک
               if (_platePhoto != null)
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
