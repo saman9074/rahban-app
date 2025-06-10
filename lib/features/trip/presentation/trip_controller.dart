@@ -85,10 +85,6 @@ class TripController with ChangeNotifier {
     });
   }
 
-  void _stopLocationStream() {
-    _positionStreamSubscription?.cancel();
-  }
-
   Future<void> loadActiveTrip() async {
     final tripId = await _secureStorage.read(key: 'active_trip_id');
     if (tripId != null) {
@@ -122,6 +118,14 @@ class TripController with ChangeNotifier {
     }
   }
 
+  @override
+  void dispose() {
+    _positionStreamSubscription?.cancel();
+    _backendUpdateTimer?.cancel();
+    _serviceStatusStream?.cancel();
+    super.dispose();
+  }
+
   Future<void> triggerSOS() async {
     if (_activeTripId == null) return;
     try {
@@ -130,10 +134,11 @@ class TripController with ChangeNotifier {
           tripId: _activeTripId!,
           location: _currentPosition!,
         );
+        print("SOS: Location updated immediately before sending alert.");
       }
       await _tripRepository.triggerSOS(tripId: _activeTripId!);
     } catch (e) {
-      print("Error triggering SOS: $e");
+      print("Error triggering SOS with location update: $e");
     }
   }
 
@@ -146,6 +151,7 @@ class TripController with ChangeNotifier {
       }
       try {
         _tripRepository.updateLocation(tripId: _activeTripId!, location: _currentPosition!);
+        print("Backend Location updated for trip $_activeTripId at ${DateTime.now()}");
       } catch (e) {
         print("Failed to send location update to backend: $e");
       }
@@ -156,12 +162,5 @@ class TripController with ChangeNotifier {
     _backendUpdateTimer?.cancel();
     _backendUpdateTimer = null;
   }
-
-  @override
-  void dispose() {
-    _stopLocationStream();
-    _stopBackendUpdates();
-    _serviceStatusStream?.cancel();
-    super.dispose();
-  }
 }
+

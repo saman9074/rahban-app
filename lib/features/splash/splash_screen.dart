@@ -8,7 +8,8 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
@@ -30,7 +31,6 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       CurvedAnimation(parent: _animationController, curve: Curves.elasticOut),
     );
 
-    // **تغییر:** یک تاخیر کوتاه برای نمایش بهتر اسپلش اضافه شد
     Timer(const Duration(milliseconds: 500), () {
       if (mounted) {
         _animationController.forward();

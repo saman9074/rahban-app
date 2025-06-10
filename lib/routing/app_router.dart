@@ -32,7 +32,6 @@ class AppRouter {
           path: '/register',
           builder: (context, state) => const RegisterScreen(),
         ),
-        // **تغییر:** استفاده از ShellRoute برای مدیریت بهتر صفحات داخلی و دکمه بازگشت
         ShellRoute(
           builder: (context, state, child) {
             return child;
@@ -64,7 +63,8 @@ class AppRouter {
       redirect: (BuildContext context, GoRouterState state) {
         final authState = authController.authState;
         final onSplash = state.matchedLocation == '/splash';
-        final onAuthRoute = state.matchedLocation == '/login' || state.matchedLocation == '/register';
+        final onAuthRoute =
+            state.matchedLocation == '/login' || state.matchedLocation == '/register';
 
         if (authState == AuthState.unknown) {
           return onSplash ? null : '/splash';

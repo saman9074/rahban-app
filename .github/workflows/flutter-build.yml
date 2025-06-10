@@ -20,31 +20,23 @@ jobs:
         with:
           path: ~/.flutter
           key: flutter-sdk-${{ runner.os }}-${{ hashFiles('**/pubspec.yaml') }}
-          restore-keys: flutter-sdk-
+          restore-keys: |
+            flutter-sdk-${{ runner.os }}-
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.32.2'
-          cache: true   # subosito/flutter-action از cache خودش هم پشتیبانی می‌کنه
+          cache: false
 
-      - name: Cache pub packages
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.pub-cache
-            .dart_tool
-          key: pub-${{ runner.os }}-${{ hashFiles('**/pubspec.lock') }}
-          restore-keys: pub-
+      - name: Flutter Clean
+        run: flutter clean
 
-      - name: Flutter pub get
+      - name: Flutter Pub Get
         run: flutter pub get
+
+      - name: Generate Launcher Icons
+        run: flutter pub run flutter_launcher_icons
 
       - name: Build APK
         run: flutter build apk --release
-
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: apk
-          path: build/app/outputs/flutter-apk/app-release.apk
