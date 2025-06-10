@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 import 'package:rahban/features/auth/presentation/auth_controller.dart';
 import 'package:rahban/features/auth/presentation/login_screen.dart';
 import 'package:rahban/features/auth/presentation/register_screen.dart';
@@ -34,7 +33,9 @@ class AppRouter {
         ),
         ShellRoute(
           builder: (context, state, child) {
-            return child;
+            return Scaffold(
+              body: child,
+            );
           },
           routes: [
             GoRoute(
@@ -67,13 +68,15 @@ class AppRouter {
             state.matchedLocation == '/login' || state.matchedLocation == '/register';
 
         if (authState == AuthState.unknown) {
+          // اجازه میدیم Splash نمایش داده بشه
           return onSplash ? null : '/splash';
         }
 
         final isLoggedIn = authState == AuthState.authenticated;
 
         if (onSplash) {
-          return isLoggedIn ? '/home' : '/login';
+          // اجازه میدیم Splash نمایش داده بشه بدون ریدایرکت خودکار
+          return null;
         }
 
         if (!isLoggedIn && !onAuthRoute) {

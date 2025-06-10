@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:rahban/features/auth/presentation/auth_controller.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -32,8 +35,19 @@ class _SplashScreenState extends State<SplashScreen>
     );
 
     Timer(const Duration(milliseconds: 500), () {
-      if (mounted) {
-        _animationController.forward();
+      if (mounted) _animationController.forward();
+    });
+
+    // ✅ اینجا هدایت بعد از ۵ ثانیه
+    Timer(const Duration(seconds: 5), () {
+      final authState = context.read<AuthController>().authState;
+
+      if (!mounted) return;
+
+      if (authState == AuthState.authenticated) {
+        context.go('/home');
+      } else {
+        context.go('/login');
       }
     });
   }

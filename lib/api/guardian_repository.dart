@@ -7,8 +7,7 @@ class GuardianRepository {
 
   Future<List<Guardian>> getGuardians() async {
     final response = await _dio.get('/guardians');
-    // **تغییر:** پردازش پاسخ API برای تطابق با ساختار { "data": [...] }
-    final data = response.data['data'] as List;
+    final data = response.data as List;
     return data.map((json) => Guardian.fromJson(json)).toList();
   }
 
