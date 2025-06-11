@@ -10,6 +10,10 @@ class TripController with ChangeNotifier {
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
   TripController(this._tripRepository) {
+    // *** تغییر ۱: فراخوانی متد جدید برای بررسی وضعیت اولیه GPS ***
+    _checkInitialLocationStatus();
+    // *** پایان تغییر ۱ ***
+
     loadActiveTrip();
     _listenToLocationService();
   }
@@ -32,18 +36,31 @@ class TripController with ChangeNotifier {
   bool get isLocationLoading => _isLocationLoading;
   bool get locationServiceEnabled => _locationServiceEnabled;
 
+
+  // *** تغییر ۲: اضافه کردن متد جدید برای بررسی وضعیت اولیه ***
+  /// وضعیت اولیه سرویس موقعیت‌یاب را در لحظه ساخت کنترلر بررسی می‌کند.
+  Future<void> _checkInitialLocationStatus() async {
+    _locationServiceEnabled = await Geolocator.isLocationServiceEnabled();
+    // به ویجت‌ها اطلاع می‌دهد تا UI بلافاصله به‌روز شود.
+    notifyListeners();
+  }
+  // *** پایان تغییر ۲ ***
+
+
   void _listenToLocationService() {
     _serviceStatusStream = Geolocator.getServiceStatusStream().listen((ServiceStatus status) {
-      final wasEnabled = _locationServiceEnabled;
-      _locationServiceEnabled = status == ServiceStatus.enabled;
-
-      if (_locationServiceEnabled && !wasEnabled) {
-        initializeLocationService();
+      final bool isCurrentlyEnabled = status == ServiceStatus.enabled;
+      // *** تغییر ۳: فقط در صورت تغییر وضعیت، UI را به‌روز می‌کنیم ***
+      if (_locationServiceEnabled != isCurrentlyEnabled) {
+        _locationServiceEnabled = isCurrentlyEnabled;
+        // اگر سرویس تازه روشن شده باشد، موقعیت‌یابی را شروع کن
+        if (_locationServiceEnabled) {
+          initializeLocationService();
+        }
+        notifyListeners();
       }
-
-      notifyListeners();
+      // *** پایان تغییر ۳ ***
     }, onError: (error) {
-      // اگر خطایی در استریم رخ داد می‌توانید اینجا مدیریت کنید
       print("Error in location service status stream: $error");
     });
   }

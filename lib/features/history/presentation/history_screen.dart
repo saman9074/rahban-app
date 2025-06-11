@@ -30,7 +30,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
           title: const Text('تاریخچه سفرها'),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
-            onPressed: () => context.pop(), // دکمه بازگشت
+            onPressed: () {
+              // بررسی می‌کنیم که آیا صفحه‌ای برای بازگشت در پشته وجود دارد؟
+              if (context.canPop()) {
+                // اگر وجود داشت، بازگشت می‌کنیم
+                context.pop();
+              } else {
+                // در غیر این صورت، به صفحه‌ی خانه می‌رویم
+                context.go('/home');
+              }
+            },
           ),
         ),
         body: Consumer<HistoryController>(

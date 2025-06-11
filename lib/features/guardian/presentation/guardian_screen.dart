@@ -77,7 +77,16 @@ class _GuardianScreenState extends State<GuardianScreen> {
           title: const Text('مدیریت نگهبانان'),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
-            onPressed: () => context.pop(), // اگر GoRouter داری
+            onPressed: () {
+              // بررسی می‌کنیم که آیا صفحه‌ای برای بازگشت در پشته وجود دارد؟
+              if (context.canPop()) {
+                // اگر وجود داشت، بازگشت می‌کنیم
+                context.pop();
+              } else {
+                // در غیر این صورت، به صفحه‌ی خانه می‌رویم
+                context.go('/home');
+              }
+            },
           ),
         ),
         body: Consumer<GuardianController>(

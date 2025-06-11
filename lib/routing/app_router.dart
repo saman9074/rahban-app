@@ -62,9 +62,9 @@ class AppRouter {
           routes: [
             GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
             GoRoute(path: '/profile', builder: (context, state) => const ProfileScreen()),
-            GoRoute(path: '/guardian', builder: (context, state) => const GuardianScreen()),
+            GoRoute(path: '/guardians', builder: (context, state) => const GuardianScreen()),
             GoRoute(path: '/history', builder: (context, state) => const HistoryScreen()),
-            GoRoute(path: '/trip', builder: (context, state) => const StartTripScreen()),
+            GoRoute(path: '/trip-start', builder: (context, state) => const StartTripScreen()),
           ],
         ),
       ],
