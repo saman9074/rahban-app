@@ -64,7 +64,7 @@ class AppRouter {
             GoRoute(path: '/profile', builder: (context, state) => const ProfileScreen()),
             GoRoute(path: '/guardians', builder: (context, state) => const GuardianScreen()),
             GoRoute(path: '/history', builder: (context, state) => const HistoryScreen()),
-            GoRoute(path: '/trip-start', builder: (context, state) => const StartTripScreen()),
+            GoRoute(path: '/start-trip', builder: (context, state) => const StartTripScreen()),
           ],
         ),
       ],
