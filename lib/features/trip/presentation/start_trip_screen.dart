@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'dart:convert';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -10,8 +9,9 @@ import 'package:rahban/api/trip_repository.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:rahban/features/guardian/models/guardian_model.dart';
 import 'package:rahban/features/guardian/presentation/guardian_controller.dart';
+import 'package:rahban/features/security/e2ee_controller.dart'; // NEW
 import 'package:rahban/features/trip/presentation/trip_controller.dart';
-import 'package:rahban/utils/encryption_service.dart'; // NEW IMPORT
+import 'package:rahban/utils/encryption_service.dart';
 
 class StartTripScreen extends StatefulWidget {
   const StartTripScreen({super.key});
@@ -34,7 +34,6 @@ class _StartTripScreenState extends State<StartTripScreen> {
   @override
   void initState() {
     super.initState();
-    // Fetch guardians as soon as the screen is ready.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<GuardianController>().fetchGuardians();
     });
@@ -58,34 +57,33 @@ class _StartTripScreenState extends State<StartTripScreen> {
   }
 
   Future<void> _startTrip() async {
-    // 1. Extract location and the E2EE key passed from the previous screen.
-    final extra = GoRouterState.of(context).extra as Map<String, dynamic>?;
-    final location = extra?['location'] as LatLng?;
-    final base64Key = extra?['e2eeKey'] as String?;
+    final location = GoRouterState.of(context).extra as LatLng?;
+    final e2eeController = context.read<E2EEController>();
 
     if (_selectedGuardians.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('لطفا حداقل یک نگهبان انتخاب کنید.')));
       return;
     }
-    if (location == null || base64Key == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('خطا: اطلاعات امنیتی یا موقعیت مکانی یافت نشد.')));
+    if (location == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('خطا: موقعیت مکانی یافت نشد.')));
+      return;
+    }
+    if (!e2eeController.isKeySet) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('خطا: کلید امنیتی تنظیم نشده است.')));
       return;
     }
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
       try {
         // --- E2EE Encryption Step ---
-        // Decode the Base64 key back to bytes.
-        final Uint8List keyBytes = base64.decode(base64Key);
-        // Create the JSON string for the location.
+        final keyBytes = await e2eeController.getKeyBytes();
         final String locationJson = jsonEncode({'lat': location.latitude, 'lon': location.longitude});
-        // Encrypt the JSON string using the key.
         final String encryptedLocation = EncryptionService.encrypt(locationJson, keyBytes);
         // --- End E2EE Step ---
 
         final response = await context.read<TripRepository>().startTrip(
           guardians: _selectedGuardians,
-          encryptedInitialLocation: encryptedLocation, // Pass the encrypted data
+          encryptedInitialLocation: encryptedLocation, // Pass encrypted data
           vehicleInfo: {
             'plate': _plateController.text,
             'type': _typeController.text,
@@ -96,9 +94,8 @@ class _StartTripScreenState extends State<StartTripScreen> {
 
         final tripId = response.data['trip']['id'].toString();
         if (mounted) {
-          // Pass the tripId and the key to the controller to be stored securely
-          // for the duration of the trip.
-          await context.read<TripController>().startNewTrip(tripId, base64Key);
+          // The key is permanent, so we no longer pass it to the trip controller.
+          await context.read<TripController>().startNewTrip(tripId);
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('سفر با موفقیت آغاز شد!')));
           context.go('/home');
         }

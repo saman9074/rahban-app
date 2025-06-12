@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -10,6 +11,7 @@ import 'package:rahban/features/auth/presentation/auth_controller.dart';
 import 'package:rahban/features/guardian/presentation/guardian_controller.dart';
 import 'package:rahban/features/history/presentation/history_controller.dart';
 import 'package:rahban/features/profile/presentation/profile_controller.dart';
+import 'package:rahban/features/security/e2ee_controller.dart'; // NEW
 import 'package:rahban/features/trip/presentation/trip_controller.dart';
 import 'package:rahban/routing/app_router.dart';
 import 'package:camera/camera.dart';
@@ -17,20 +19,15 @@ import 'package:camera/camera.dart';
 List<CameraDescription> cameras = [];
 
 void main() async {
-  // Ensure that plugin services are initialized so that `availableCameras()`
-  // can be called before `runApp()`
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Initialize date formatting for the Persian locale
   await initializeDateFormatting('fa_IR', null);
-
-  // Obtain a list of the available cameras on the device.
-  try {
-    cameras = await availableCameras();
-  } on CameraException catch (e) {
-    print('Error in fetching the cameras: $e');
+  if (!kIsWeb) {
+    try {
+      cameras = await availableCameras();
+    } on CameraException catch (e) {
+      print('Error in fetching the cameras: $e');
+    }
   }
-
   runApp(const MyApp());
 }
 
@@ -41,23 +38,17 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        // Provides a simple state for managing whether the splash has been shown.
         ChangeNotifierProvider(create: (_) => AppState()),
-
-        // Provide repositories directly so they can be read by controllers.
         Provider<AuthRepository>(create: (_) => AuthRepository()),
         Provider<TripRepository>(create: (_) => TripRepository()),
         Provider<UserRepository>(create: (_) => UserRepository()),
         Provider<GuardianRepository>(create: (_) => GuardianRepository()),
 
-        // Create controllers that depend on the repositories.
-        // `context.read` is used to get the repository instance.
+        ChangeNotifierProvider<E2EEController>(create: (_) => E2EEController()), // NEW E2EE Controller
+
         ChangeNotifierProvider<AuthController>(
           create: (context) => AuthController(context.read<AuthRepository>())
             ..checkAuthenticationStatus(),
-        ),
-        ChangeNotifierProvider<TripController>(
-          create: (context) => TripController(context.read<TripRepository>()),
         ),
         ChangeNotifierProvider<ProfileController>(
           create: (context) =>
@@ -71,20 +62,24 @@ class MyApp extends StatelessWidget {
           create: (context) =>
               GuardianController(context.read<GuardianRepository>()),
         ),
+        // TripController now depends on TripRepository AND E2EEController
+        ChangeNotifierProvider<TripController>(
+          create: (context) => TripController(
+            context.read<TripRepository>(),
+            context.read<E2EEController>(),
+          ),
+        ),
       ],
-      // The Builder widget is used to get a context that has access to the providers above.
       child: Builder(
         builder: (context) {
-          // The router now gets the AuthController by watching the context.
           final appRouter = AppRouter(context.watch<AuthController>());
-
           return MaterialApp.router(
             title: 'Rahban',
             debugShowCheckedModeBanner: false,
             theme: ThemeData(
               primarySwatch: Colors.teal,
               scaffoldBackgroundColor: Colors.grey[50],
-              textTheme: GoogleFonts.vazirmatnTextTheme(Theme.of(context).textTheme)
+              textTheme: GoogleFonts.vazirmatnTextTheme(ThemeData.light().textTheme)
                   .apply(bodyColor: Colors.grey[800], displayColor: Colors.black87),
               appBarTheme: AppBarTheme(
                   backgroundColor: Colors.transparent,
@@ -130,7 +125,6 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// A simple state class for managing global UI state, like splash screen visibility.
 class AppState extends ChangeNotifier {
   bool _splashShown = false;
   bool get splashShown => _splashShown;

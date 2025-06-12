@@ -10,21 +10,20 @@ class TripRepository {
 
   /// Starts a new trip on the server.
   ///
-  /// MODIFIED to accept `encryptedInitialLocation` instead of raw LatLng.
-  /// The backend API has been updated to expect a single `encrypted_data` field for the location.
+  /// The payload sent to the backend is a multipart form. The main trip data
+  /// is JSON encoded and passed in a field named 'data'.
   Future<Response> startTrip({
     Map<String, String>? vehicleInfo,
     required List<Guardian> guardians,
-    required String encryptedInitialLocation, // CHANGED from LatLng
+    required String encryptedInitialLocation,
     XFile? platePhoto,
   }) async {
-    // The main data payload is JSON encoded and sent as a string field.
-    // This simplifies handling on the backend, especially with multipart forms.
+    // The main data payload is JSON encoded.
     final tripData = {
       'vehicle_info': vehicleInfo,
       'guardians': guardians.map((g) => g.toJson()).toList(),
-      // The backend expects the first encrypted location point here.
-      'encrypted_location': encryptedInitialLocation,
+      // FIXED: The key for the initial location has been changed to match the backend validation rule.
+      'initial_encrypted_data': encryptedInitialLocation,
     };
 
     final formData = FormData.fromMap({
@@ -57,8 +56,7 @@ class TripRepository {
 
   /// Updates the location for an ongoing trip.
   ///
-  /// MODIFIED to send a single encrypted string. The backend route
-  /// `trips/{trip_id}/location` now expects a JSON body like: `{"data": "encrypted_string"}`
+  /// The backend route expects a JSON body like: `{"data": "encrypted_string"}`
   Future<Response> updateLocation({required String tripId, required String encryptedData}) async {
     return await _dio.post('/trips/$tripId/location', data: {'data': encryptedData});
   }

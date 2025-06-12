@@ -5,6 +5,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import 'package:rahban/features/auth/presentation/auth_controller.dart';
 import 'package:rahban/features/profile/presentation/profile_controller.dart';
+import 'package:rahban/features/security/e2ee_controller.dart'; // NEW
 import 'package:rahban/features/trip/presentation/trip_controller.dart';
 import 'package:volume_controller/volume_controller.dart';
 
@@ -19,27 +20,30 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // Initialize services when the screen is first built.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<TripController>().initializeLocationService();
-      // CORRECTED: The method to fetch the user profile is `loadUserProfile`.
       context.read<ProfileController>().fetchUser();
-      _setupVolumeListener();
+      // The E2EE key is loaded automatically by its controller's constructor
     });
   }
 
-  void _setupVolumeListener() {
-    VolumeController().listener((volume) {
-      if (mounted && context.read<TripController>().isInTrip) {
-        context.read<TripController>().triggerSOS();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('وضعیت اضطراری (SOS) فعال شد!'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    });
+  // This method checks if the permanent E2EE key is set.
+  // If not, it navigates to the setup screen. Otherwise, it starts the trip.
+  void _handleStartTrip(LatLng? currentPosition) {
+    if (currentPosition == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('موقعیت مکانی شما هنوز مشخص نشده است.')),
+      );
+      return;
+    }
+
+    final e2eeController = context.read<E2EEController>();
+
+    if (e2eeController.isKeySet) {
+      context.go('/start-trip', extra: currentPosition);
+    } else {
+      context.go('/e2ee-setup', extra: currentPosition);
+    }
   }
 
   @override
@@ -48,15 +52,15 @@ class _HomeScreenState extends State<HomeScreen> {
       textDirection: TextDirection.rtl,
       child: Scaffold(
         appBar: _buildAppBar(context),
-        body: Consumer<TripController>(
-          builder: (context, tripController, child) {
+        body: Consumer2<TripController, E2EEController>( // Consume both controllers
+          builder: (context, tripController, e2eeController, child) {
             return Stack(
               children: [
                 _buildMap(tripController),
                 if (tripController.isInTrip) _buildInTripOverlay(tripController),
                 if (!tripController.isInTrip)
                   _buildStartTripButton(context, tripController.currentPosition),
-                if (tripController.isLocationLoading) _buildLoadingIndicator(),
+                if (tripController.isLocationLoading || e2eeController.isLoading) _buildLoadingIndicator(),
                 if (tripController.locationError.isNotEmpty) _buildErrorDisplay(tripController.locationError),
               ],
             );
@@ -69,7 +73,6 @@ class _HomeScreenState extends State<HomeScreen> {
   AppBar _buildAppBar(BuildContext context) {
     final profileController = context.watch<ProfileController>();
     final user = profileController.user;
-
     return AppBar(
       title: Text('رهبان - ${user?.name ?? "کاربر"} خوش آمدید'),
       actions: [
@@ -100,7 +103,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildMap(TripController tripController) {
     return FlutterMap(
       options: MapOptions(
-        initialCenter: tripController.currentPosition ?? const LatLng(35.6892, 51.3890), // Default to Tehran
+        initialCenter: tripController.currentPosition ?? const LatLng(35.6892, 51.3890),
         initialZoom: 16.0,
       ),
       children: [
@@ -133,7 +136,7 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               CircularProgressIndicator(),
               SizedBox(height: 16),
-              Text('در حال دریافت موقعیت...'),
+              Text('در حال بارگذاری...'),
             ],
           ),
         ),
@@ -200,9 +203,7 @@ class _HomeScreenState extends State<HomeScreen> {
           padding: const EdgeInsets.symmetric(vertical: 20),
           textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
-        onPressed: currentPosition == null
-            ? null
-            : () => context.go('/e2ee-setup', extra: currentPosition),
+        onPressed: () => _handleStartTrip(currentPosition),
       ),
     );
   }
