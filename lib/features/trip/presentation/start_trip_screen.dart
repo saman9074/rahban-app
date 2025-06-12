@@ -120,7 +120,16 @@ class _StartTripScreenState extends State<StartTripScreen> {
           title: const Text('شروع سفر جدید'),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
-            onPressed: () => context.pop(),
+            onPressed: () {
+              // بررسی می‌کنیم که آیا صفحه‌ای برای بازگشت در پشته وجود دارد؟
+              if (context.canPop()) {
+                // اگر وجود داشت، بازگشت می‌کنیم
+                context.pop();
+              } else {
+                // در غیر این صورت، به صفحه‌ی خانه می‌رویم
+                context.go('/home');
+              }
+            }
           ),
         ),
         body: Form(

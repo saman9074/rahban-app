@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:go_router/go_router.dart';
@@ -5,7 +6,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import 'package:rahban/features/auth/presentation/auth_controller.dart';
 import 'package:rahban/features/profile/presentation/profile_controller.dart';
-import 'package:rahban/features/security/e2ee_controller.dart'; // NEW
+import 'package:rahban/features/security/e2ee_controller.dart';
 import 'package:rahban/features/trip/presentation/trip_controller.dart';
 import 'package:volume_controller/volume_controller.dart';
 
@@ -17,18 +18,54 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  // Controller to programmatically move the map
+  final MapController _mapController = MapController();
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<TripController>().initializeLocationService();
       context.read<ProfileController>().fetchUser();
-      // The E2EE key is loaded automatically by its controller's constructor
+
+      // Setup the volume listener only on mobile platforms
+      if (!kIsWeb) {
+        _setupVolumeListener();
+      }
     });
   }
 
-  // This method checks if the permanent E2EE key is set.
-  // If not, it navigates to the setup screen. Otherwise, it starts the trip.
+  /// Sets up a listener for volume button presses to trigger SOS.
+  void _setupVolumeListener() {
+    VolumeController().listener((volume) {
+      // Check if the widget is still in the tree and a trip is active
+      if (mounted && context.read<TripController>().isInTrip) {
+        _triggerSOS();
+      }
+    });
+  }
+
+  /// A helper function to trigger SOS and show a confirmation message.
+  void _triggerSOS() {
+    context.read<TripController>().triggerSOS();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('وضعیت اضطراری (SOS) فعال شد!'),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+
+  /// A helper function to recenter the map on the user's current location.
+  void _recenterMap() {
+    final currentPosition = context.read<TripController>().currentPosition;
+    if (currentPosition != null) {
+      _mapController.move(currentPosition, 16.0);
+    }
+  }
+
+
+  /// Checks if the E2EE key is set before starting a trip.
   void _handleStartTrip(LatLng? currentPosition) {
     if (currentPosition == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -52,7 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
       textDirection: TextDirection.rtl,
       child: Scaffold(
         appBar: _buildAppBar(context),
-        body: Consumer2<TripController, E2EEController>( // Consume both controllers
+        body: Consumer2<TripController, E2EEController>(
           builder: (context, tripController, e2eeController, child) {
             return Stack(
               children: [
@@ -62,6 +99,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   _buildStartTripButton(context, tripController.currentPosition),
                 if (tripController.isLocationLoading || e2eeController.isLoading) _buildLoadingIndicator(),
                 if (tripController.locationError.isNotEmpty) _buildErrorDisplay(tripController.locationError),
+                // Add the recenter button to the stack
+                _buildRecenterButton(),
               ],
             );
           },
@@ -102,6 +141,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildMap(TripController tripController) {
     return FlutterMap(
+      mapController: _mapController, // Assign the controller to the map
       options: MapOptions(
         initialCenter: tripController.currentPosition ?? const LatLng(35.6892, 51.3890),
         initialZoom: 16.0,
@@ -123,6 +163,19 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
       ],
+    );
+  }
+
+  Widget _buildRecenterButton() {
+    return Positioned(
+      bottom: 120, // Adjust position to not overlap with other buttons
+      left: 24,
+      child: FloatingActionButton(
+        onPressed: _recenterMap,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.teal,
+        child: const Icon(Icons.gps_fixed),
+      ),
     );
   }
 
@@ -165,24 +218,32 @@ class _HomeScreenState extends State<HomeScreen> {
       left: 24,
       right: 24,
       child: Card(
-        color: Colors.red[800],
+        color: Colors.white,
         elevation: 8,
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 12.0),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              const Text(
-                'سفر در جریان است',
-                style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+              // SOS Button
+              ElevatedButton.icon(
+                icon: const Icon(Icons.sos),
+                label: const Text('SOS'),
+                onPressed: _triggerSOS,
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red[700],
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12)
+                ),
               ),
+              // End Trip Button
               ElevatedButton(
                 onPressed: () => tripController.completeActiveTrip(),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
-                child: Text(
-                  'پایان سفر',
-                  style: TextStyle(color: Colors.red[800], fontWeight: FontWeight.bold),
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.teal[700],
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12)
                 ),
+                child: const Text('پایان سفر'),
               ),
             ],
           ),
