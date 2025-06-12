@@ -10,6 +10,8 @@ import 'package:rahban/features/auth/presentation/auth_controller.dart';
 import 'package:rahban/features/profile/presentation/profile_controller.dart';
 import 'package:rahban/features/security/e2ee_controller.dart';
 import 'package:rahban/features/trip/presentation/trip_controller.dart';
+// No longer need volume_controller
+// import 'package:volume_controller/volume_controller.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -20,6 +22,11 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final MapController _mapController = MapController();
+
+  // Define bindings for each volume key individually.
+  final _volumeUpBinding = Keybinding.from({LogicalKeyboardKey.audioVolumeUp});
+  final _volumeDownBinding =
+  Keybinding.from({LogicalKeyboardKey.audioVolumeDown});
 
   @override
   void initState() {
@@ -33,27 +40,30 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  /// Sets up a keybinding to trigger SOS when both volume keys are pressed.
+  /// Sets up individual listeners for each volume key to detect a simultaneous press.
   void _setupSOSKeybinding() {
-    // Define the keybinding for Volume Up + Volume Down
-    final sosKeybinding = Keybinding(
-      {
-        KeyCode.from(LogicalKeyboardKey.audioVolumeUp),
-        KeyCode.from(LogicalKeyboardKey.audioVolumeDown),
-      },
-      // `inclusive: true` means the binding triggers even if other keys are also pressed.
-      // For this use case, `exclusive` (the default) is safer. It will only trigger
-      // if ONLY these two keys are pressed.
-      inclusive: false,
-    );
-
-    // Bind the key combination to the _triggerSOS method.
-    // This callback is only triggered on the "press" event.
-    Keybinder.bind(sosKeybinding, () {
-      if (mounted && context.read<TripController>().isInTrip) {
-        _triggerSOS();
+    // This callback is for the Volume Up key.
+    // It checks if the Volume Down key is already pressed.
+    Keybinder.bind(_volumeUpBinding, (bool pressed) {
+      if (pressed && _volumeDownBinding.isPressed) {
+        _handleSOSActivation();
       }
     });
+
+    // This callback is for the Volume Down key.
+    // It checks if the Volume Up key is already pressed.
+    Keybinder.bind(_volumeDownBinding, (bool pressed) {
+      if (pressed && _volumeUpBinding.isPressed) {
+        _handleSOSActivation();
+      }
+    });
+  }
+
+  /// Centralized handler to activate SOS if conditions are met.
+  void _handleSOSActivation() {
+    if (mounted && context.read<TripController>().isInTrip) {
+      _triggerSOS();
+    }
   }
 
   /// A helper function to trigger SOS and show a confirmation message.

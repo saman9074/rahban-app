@@ -89,7 +89,23 @@ class _E2EESetupScreenState extends State<E2EESetupScreen> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        appBar: AppBar(title: Text(isResetting ? 'بازنشانی کلید امنیتی' : 'تنظیم کلید امنیتی')),
+        appBar: AppBar(
+            title: Text(isResetting ? 'بازنشانی کلید امنیتی' : 'تنظیم کلید امنیتی'),
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+                onPressed: () {
+                  // بررسی می‌کنیم که آیا صفحه‌ای برای بازگشت در پشته وجود دارد؟
+                  if (context.canPop()) {
+                    // اگر وجود داشت، بازگشت می‌کنیم
+                    context.pop();
+                  } else {
+                    // در غیر این صورت، به صفحه‌ی خانه می‌رویم
+                    context.go('/home');
+                  }
+                }
+            ),
+        ),
+
         body: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
