@@ -55,6 +55,21 @@ jobs:
       - name: Generate Launcher Icons
         run: flutter pub run flutter_launcher_icons
 
+      - name: 📌 Set Version from Commit Message
+        run: |
+          echo "📦 Checking for version in commit message..."
+          commit_message=$(git log -1 --pretty=%B)
+          if [[ "$commit_message" =~ \[([0-9]+\.[0-9]+\.[0-9]+)\+([0-9]+)\] ]]; then
+            version="${BASH_REMATCH[1]}"
+            build_number="${BASH_REMATCH[2]}"
+            new_version="${version}+${build_number}"
+            echo "✅ Found version: $new_version"
+            sed -i "s/^version: .*/version: $new_version/" pubspec.yaml
+          else
+            echo "⚠️ No version tag found in commit message. Skipping version update."
+          fi
+        
+
       - name: Build APK
         run: flutter build apk --release
 
