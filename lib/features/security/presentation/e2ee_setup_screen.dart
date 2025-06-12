@@ -36,7 +36,7 @@ class _E2EESetupScreenState extends State<E2EESetupScreen> {
     });
   }
 
-  Future<void> _saveKeyAndContinue() async {
+  Future<void> _saveKeyAndProceed() async {
     if (!_hasConfirmed) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('لطفاً ابتدا ذخیره کردن کلمات را تایید کنید.')),
@@ -47,17 +47,25 @@ class _E2EESetupScreenState extends State<E2EESetupScreen> {
     setState(() => _isSaving = true);
 
     try {
-      // Save the key permanently using the controller
+      // Save the new key permanently, overwriting any existing one.
       final e2eeController = context.read<E2EEController>();
       await e2eeController.generateAndSaveKey(_secureWords);
 
-      // Continue to the next step (starting the trip)
-      final location = GoRouterState.of(context).extra as LatLng?;
-      if (mounted && location != null) {
-        context.go('/start-trip', extra: location);
-      } else if (mounted) {
-        // If navigated here from settings, just pop back.
-        context.pop();
+      // Check if we are in the "start trip" flow or "reset key" flow.
+      final extra = GoRouterState.of(context).extra;
+      final location = (extra is LatLng) ? extra : null;
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('کلید امنیتی با موفقیت ذخیره شد!')),
+        );
+        if (location != null) {
+          // Came from "start trip" flow, proceed to the next step.
+          context.go('/start-trip', extra: location);
+        } else {
+          // Came from "reset key" flow, go back to the previous screen (home).
+          context.pop();
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -75,10 +83,13 @@ class _E2EESetupScreenState extends State<E2EESetupScreen> {
   @override
   Widget build(BuildContext context) {
     final String displayWords = _secureWords.join(' - ');
+    // Check if a key is already set to adjust the title and text.
+    final bool isResetting = context.read<E2EEController>().isKeySet;
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        appBar: AppBar(title: const Text('تنظیم کلید امنیتی دائمی')),
+        appBar: AppBar(title: Text(isResetting ? 'بازنشانی کلید امنیتی' : 'تنظیم کلید امنیتی')),
         body: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
@@ -88,7 +99,7 @@ class _E2EESetupScreenState extends State<E2EESetupScreen> {
               const Icon(Icons.shield_moon_outlined, color: Colors.teal, size: 80),
               const SizedBox(height: 24),
               Text(
-                'کلمات بازیابی امنیتی شما',
+                'کلمات بازیابی جدید شما',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),
@@ -124,10 +135,12 @@ class _E2EESetupScreenState extends State<E2EESetupScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              const Text(
-                'این ۵ کلمه، کلید دائمی شماست. آن را در جایی امن یادداشت کنید. فقط با این کلمات می‌توان موقعیت شما را مشاهده کرد. این کلمات فقط یک بار نمایش داده می‌شوند.',
+              Text(
+                isResetting
+                    ? 'این ۵ کلمه جایگزین کلید قبلی شما می‌شود. آن را در جایی امن یادداشت کنید. کلید قبلی دیگر معتبر نخواهد بود.'
+                    : 'این ۵ کلمه، کلید دائمی شماست. آن را در جایی امن یادداشت کنید. فقط با این کلمات می‌توان موقعیت شما را مشاهده کرد.',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 15, height: 1.6, color: Colors.red),
+                style: TextStyle(fontSize: 15, height: 1.6, color: Colors.red[700]),
               ),
               const SizedBox(height: 24),
               CheckboxListTile(
@@ -147,7 +160,7 @@ class _E2EESetupScreenState extends State<E2EESetupScreen> {
                   : ElevatedButton.icon(
                 icon: const Icon(Icons.check_circle_outline),
                 label: const Text('ذخیره و ادامه'),
-                onPressed: _hasConfirmed ? _saveKeyAndContinue : null,
+                onPressed: _hasConfirmed ? _saveKeyAndProceed : null,
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 20),
                 ),

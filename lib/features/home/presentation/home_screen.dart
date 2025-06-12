@@ -125,6 +125,12 @@ class _HomeScreenState extends State<HomeScreen> {
           tooltip: 'تاریخچه سفرها',
           onPressed: () => context.go('/history'),
         ),
+        // NEW: Button to reset the E2EE key
+        IconButton(
+          icon: const Icon(Icons.vpn_key_outlined),
+          tooltip: 'بازنشانی کلید امنیتی',
+          onPressed: () => context.go('/e2ee-setup'), // Navigates to the setup screen without a location
+        ),
         IconButton(
           icon: const Icon(Icons.person_outline),
           tooltip: 'پروفایل',
