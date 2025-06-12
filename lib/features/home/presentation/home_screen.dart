@@ -1,14 +1,15 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // Import for keyboard keys
 import 'package:flutter_map/flutter_map.dart';
 import 'package:go_router/go_router.dart';
+import 'package:keybinder/keybinder.dart'; // Import keybinder
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import 'package:rahban/features/auth/presentation/auth_controller.dart';
 import 'package:rahban/features/profile/presentation/profile_controller.dart';
 import 'package:rahban/features/security/e2ee_controller.dart';
 import 'package:rahban/features/trip/presentation/trip_controller.dart';
-import 'package:volume_controller/volume_controller.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -18,7 +19,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // Controller to programmatically move the map
   final MapController _mapController = MapController();
 
   @override
@@ -28,17 +28,28 @@ class _HomeScreenState extends State<HomeScreen> {
       context.read<TripController>().initializeLocationService();
       context.read<ProfileController>().fetchUser();
 
-      // Setup the volume listener only on mobile platforms
-      if (!kIsWeb) {
-        _setupVolumeListener();
-      }
+      // Setup the keybinding for SOS trigger
+      _setupSOSKeybinding();
     });
   }
 
-  /// Sets up a listener for volume button presses to trigger SOS.
-  void _setupVolumeListener() {
-    VolumeController().listener((volume) {
-      // Check if the widget is still in the tree and a trip is active
+  /// Sets up a keybinding to trigger SOS when both volume keys are pressed.
+  void _setupSOSKeybinding() {
+    // Define the keybinding for Volume Up + Volume Down
+    final sosKeybinding = Keybinding(
+      {
+        KeyCode.from(LogicalKeyboardKey.audioVolumeUp),
+        KeyCode.from(LogicalKeyboardKey.audioVolumeDown),
+      },
+      // `inclusive: true` means the binding triggers even if other keys are also pressed.
+      // For this use case, `exclusive` (the default) is safer. It will only trigger
+      // if ONLY these two keys are pressed.
+      inclusive: false,
+    );
+
+    // Bind the key combination to the _triggerSOS method.
+    // This callback is only triggered on the "press" event.
+    Keybinder.bind(sosKeybinding, () {
       if (mounted && context.read<TripController>().isInTrip) {
         _triggerSOS();
       }
@@ -84,6 +95,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   @override
+  void dispose() {
+    // It's crucial to dispose of the Keybinder to prevent memory leaks.
+    Keybinder.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Directionality(
       textDirection: TextDirection.rtl,
@@ -99,7 +117,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   _buildStartTripButton(context, tripController.currentPosition),
                 if (tripController.isLocationLoading || e2eeController.isLoading) _buildLoadingIndicator(),
                 if (tripController.locationError.isNotEmpty) _buildErrorDisplay(tripController.locationError),
-                // Add the recenter button to the stack
                 _buildRecenterButton(),
               ],
             );
@@ -125,11 +142,10 @@ class _HomeScreenState extends State<HomeScreen> {
           tooltip: 'تاریخچه سفرها',
           onPressed: () => context.go('/history'),
         ),
-        // NEW: Button to reset the E2EE key
         IconButton(
           icon: const Icon(Icons.vpn_key_outlined),
           tooltip: 'بازنشانی کلید امنیتی',
-          onPressed: () => context.go('/e2ee-setup'), // Navigates to the setup screen without a location
+          onPressed: () => context.go('/e2ee-setup'),
         ),
         IconButton(
           icon: const Icon(Icons.person_outline),
@@ -147,7 +163,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildMap(TripController tripController) {
     return FlutterMap(
-      mapController: _mapController, // Assign the controller to the map
+      mapController: _mapController,
       options: MapOptions(
         initialCenter: tripController.currentPosition ?? const LatLng(35.6892, 51.3890),
         initialZoom: 16.0,
@@ -174,7 +190,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildRecenterButton() {
     return Positioned(
-      bottom: 120, // Adjust position to not overlap with other buttons
+      bottom: 120,
       left: 24,
       child: FloatingActionButton(
         onPressed: _recenterMap,
@@ -231,7 +247,6 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              // SOS Button
               ElevatedButton.icon(
                 icon: const Icon(Icons.sos),
                 label: const Text('SOS'),
@@ -242,7 +257,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12)
                 ),
               ),
-              // End Trip Button
               ElevatedButton(
                 onPressed: () => tripController.completeActiveTrip(),
                 style: ElevatedButton.styleFrom(
