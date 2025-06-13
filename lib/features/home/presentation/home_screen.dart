@@ -91,9 +91,9 @@ class _HomeScreenState extends State<HomeScreen> {
     final e2eeController = context.read<E2EEController>();
 
     if (e2eeController.isKeySet) {
-      context.go('/start-trip', extra: currentPosition);
+      context.push('/start-trip', extra: currentPosition);
     } else {
-      context.go('/e2ee-setup', extra: currentPosition);
+      context.push('/e2ee-setup', extra: currentPosition);
     }
   }
 
@@ -157,7 +157,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       children: [
         TileLayer(
-          urlTemplate: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+          urlTemplate: kIsWeb ? 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png' : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
           subdomains: const ['a', 'b', 'c', 'd'],
           userAgentPackageName: 'ir.arcaneteam.rahban',
         ),

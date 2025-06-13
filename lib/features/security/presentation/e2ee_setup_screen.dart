@@ -58,7 +58,7 @@ class _E2EESetupScreenState extends State<E2EESetupScreen> {
           const SnackBar(content: Text('کلید امنیتی با موفقیت ذخیره شد!')),
         );
         if (location != null) {
-          context.go('/start-trip', extra: location);
+          context.push('/start-trip', extra: location);
         } else {
           context.go('/home');
         }
