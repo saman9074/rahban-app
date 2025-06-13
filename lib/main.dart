@@ -11,7 +11,7 @@ import 'package:rahban/features/auth/presentation/auth_controller.dart';
 import 'package:rahban/features/guardian/presentation/guardian_controller.dart';
 import 'package:rahban/features/history/presentation/history_controller.dart';
 import 'package:rahban/features/profile/presentation/profile_controller.dart';
-import 'package:rahban/features/security/e2ee_controller.dart'; // NEW
+import 'package:rahban/features/security/e2ee_controller.dart';
 import 'package:rahban/features/trip/presentation/trip_controller.dart';
 import 'package:rahban/routing/app_router.dart';
 import 'package:camera/camera.dart';
@@ -43,9 +43,7 @@ class MyApp extends StatelessWidget {
         Provider<TripRepository>(create: (_) => TripRepository()),
         Provider<UserRepository>(create: (_) => UserRepository()),
         Provider<GuardianRepository>(create: (_) => GuardianRepository()),
-
-        ChangeNotifierProvider<E2EEController>(create: (_) => E2EEController()), // NEW E2EE Controller
-
+        ChangeNotifierProvider<E2EEController>(create: (_) => E2EEController()),
         ChangeNotifierProvider<AuthController>(
           create: (context) => AuthController(context.read<AuthRepository>())
             ..checkAuthenticationStatus(),
@@ -62,7 +60,6 @@ class MyApp extends StatelessWidget {
           create: (context) =>
               GuardianController(context.read<GuardianRepository>()),
         ),
-        // TripController now depends on TripRepository AND E2EEController
         ChangeNotifierProvider<TripController>(
           create: (context) => TripController(
             context.read<TripRepository>(),
@@ -77,45 +74,73 @@ class MyApp extends StatelessWidget {
             title: 'Rahban',
             debugShowCheckedModeBanner: false,
             theme: ThemeData(
-              primarySwatch: Colors.teal,
-              scaffoldBackgroundColor: Colors.grey[50],
-              textTheme: GoogleFonts.vazirmatnTextTheme(ThemeData.light().textTheme)
-                  .apply(bodyColor: Colors.grey[800], displayColor: Colors.black87),
-              appBarTheme: AppBarTheme(
-                  backgroundColor: Colors.transparent,
-                  elevation: 0,
-                  foregroundColor: Colors.black87,
-                  titleTextStyle: GoogleFonts.vazirmatn(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.black87)),
+              primaryColor: const Color(0xFF1E3A8A),
+              scaffoldBackgroundColor: const Color(0xFFF9FAFB),
+              fontFamily: GoogleFonts.vazirmatn().fontFamily,
+              colorScheme: ColorScheme.light(
+                primary: const Color(0xFF1E3A8A),
+                secondary: const Color(0xFF10B981),
+                background: const Color(0xFFF9FAFB),
+                surface: Colors.white,
+                onPrimary: Colors.white,
+                onBackground: const Color(0xFF111827),
+                onSurface: Colors.black87,
+              ),
+              textTheme: GoogleFonts.vazirmatnTextTheme().apply(
+                bodyColor: const Color(0xFF111827),
+                displayColor: const Color(0xFF111827),
+              ),
+              appBarTheme: const AppBarTheme(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                foregroundColor: Color(0xFF111827),
+                titleTextStyle: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF111827),
+                ),
+              ),
               inputDecorationTheme: InputDecorationTheme(
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.0),
-                    borderSide: BorderSide(color: Colors.grey.shade300)),
-                enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.0),
-                    borderSide: BorderSide(color: Colors.grey.shade300)),
-                focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.0),
-                    borderSide: const BorderSide(color: Colors.teal, width: 2)),
                 filled: true,
                 fillColor: Colors.white,
+                contentPadding: const EdgeInsets.symmetric(
+                    vertical: 16.0, horizontal: 12.0),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide(color: Colors.grey.shade300),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide(color: Colors.grey.shade300),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: const BorderSide(
+                      color: Color(0xFF1E3A8A), width: 2),
+                ),
               ),
               elevatedButtonTheme: ElevatedButtonThemeData(
-                  style: ElevatedButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12.0)),
-                      padding: const EdgeInsets.symmetric(vertical: 16.0),
-                      backgroundColor: Colors.teal[700],
-                      foregroundColor: Colors.white,
-                      textStyle: GoogleFonts.vazirmatn(
-                          fontSize: 16, fontWeight: FontWeight.bold))),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF1E3A8A),
+                  foregroundColor: Colors.white,
+                  padding:
+                  const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  textStyle: GoogleFonts.vazirmatn(
+                      fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
               textButtonTheme: TextButtonThemeData(
-                  style: TextButton.styleFrom(
-                      foregroundColor: Colors.teal[800],
-                      textStyle: GoogleFonts.vazirmatn(
-                        fontWeight: FontWeight.w600,))),
+                style: TextButton.styleFrom(
+                  foregroundColor: const Color(0xFF10B981),
+                  textStyle: GoogleFonts.vazirmatn(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
             ),
             routerConfig: appRouter.router,
           );

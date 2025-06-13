@@ -43,10 +43,8 @@ class _SplashScreenState extends State<SplashScreen>
     Timer(const Duration(seconds: 5), () {
       if (!mounted) return;
 
-      // اطلاع دادن به بیرون که اسپلش نمایش داده شده و تموم شده
       widget.onInitializationComplete?.call();
 
-      // سپس هدایت به صفحه مربوطه
       final authState = context.read<AuthController>().authState;
 
       if (authState == AuthState.authenticated) {
@@ -65,33 +63,61 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Center(
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: ScaleTransition(
-            scale: _scaleAnimation,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Image.asset('assets/images/rahban.png', width: 150, height: 150),
-                const SizedBox(height: 24),
-                Text(
-                  'رهبان',
-                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                    color: Colors.teal[900],
-                    fontWeight: FontWeight.bold,
+    final theme = Theme.of(context);
+
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        backgroundColor: theme.colorScheme.background,
+        body: Center(
+          child: FadeTransition(
+            opacity: _fadeAnimation,
+            child: ScaleTransition(
+              scale: _scaleAnimation,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // لوگو یا آیکن جایگزین
+                  Builder(
+                    builder: (context) {
+                      try {
+                        return Image.asset(
+                          'assets/images/rahban.png',
+                          width: 150,
+                          height: 150,
+                          errorBuilder: (_, __, ___) => Icon(
+                            Icons.shield_outlined,
+                            size: 100,
+                            color: theme.primaryColor,
+                          ),
+                        );
+                      } catch (_) {
+                        return Icon(
+                          Icons.shield_outlined,
+                          size: 100,
+                          color: theme.primaryColor,
+                        );
+                      }
+                    },
                   ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '«سفر کن، ما مراقبیم.»',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Colors.grey[600],
+                  const SizedBox(height: 24),
+                  Text(
+                    'رهبان',
+                    style: theme.textTheme.headlineLarge?.copyWith(
+                      color: theme.primaryColorDark,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 8),
+                  Text(
+                    '«سفر کن، ما مراقبیم.»',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: Colors.grey[600],
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

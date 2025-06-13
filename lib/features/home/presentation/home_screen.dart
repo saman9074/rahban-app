@@ -22,8 +22,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final MapController _mapController = MapController();
 
   final _volumeUpBinding = Keybinding.from({LogicalKeyboardKey.audioVolumeUp});
-  final _volumeDownBinding =
-  Keybinding.from({LogicalKeyboardKey.audioVolumeDown});
+  final _volumeDownBinding = Keybinding.from({LogicalKeyboardKey.audioVolumeDown});
 
   @override
   void initState() {
@@ -60,9 +59,11 @@ class _HomeScreenState extends State<HomeScreen> {
   void _triggerSOS() {
     context.read<TripController>().triggerSOS();
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('وضعیت اضطراری (SOS) فعال شد!'),
-        backgroundColor: Colors.red,
+      SnackBar(
+        content: const Text('وضعیت اضطراری (SOS) فعال شد!'),
+        backgroundColor: Colors.red.shade800,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
@@ -77,7 +78,12 @@ class _HomeScreenState extends State<HomeScreen> {
   void _handleStartTrip(LatLng? currentPosition) {
     if (currentPosition == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('موقعیت مکانی شما هنوز مشخص نشده است.')),
+        SnackBar(
+          content: const Text('موقعیت مکانی شما هنوز مشخص نشده است.'),
+          backgroundColor: Colors.grey.shade900,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
       );
       return;
     }
@@ -101,26 +107,39 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
+        backgroundColor: theme.colorScheme.background,
         appBar: AppBar(
           title: const Text('رهبان'),
+          backgroundColor: theme.colorScheme.primary,
+          elevation: 4,
+          centerTitle: true,
         ),
         drawer: const AppDrawer(),
         body: Consumer2<TripController, E2EEController>(
           builder: (context, tripController, e2eeController, child) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              final pos = tripController.currentPosition;
+              if (pos != null) {
+                _mapController.move(pos, 16.0);
+              }
+            });
+
             return Stack(
               children: [
-                _buildMap(tripController),
-                if (tripController.isInTrip) _buildInTripOverlay(tripController),
+                _buildMap(tripController, theme),
+                if (tripController.isInTrip)
+                  _buildInTripOverlay(tripController, theme),
                 if (!tripController.isInTrip)
-                  _buildStartTripButton(context, tripController.currentPosition),
-                if (tripController.isLocationLoading ||
-                    e2eeController.isLoading) _buildLoadingIndicator(),
+                  _buildStartTripButton(context, tripController.currentPosition, theme),
+                if (tripController.isLocationLoading || e2eeController.isLoading)
+                  _buildLoadingIndicator(theme),
                 if (tripController.locationError.isNotEmpty)
                   _buildErrorDisplay(tripController.locationError),
-                _buildRecenterButton(),
+                _buildRecenterButton(theme),
               ],
             );
           },
@@ -129,17 +148,17 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildMap(TripController tripController) {
+  Widget _buildMap(TripController tripController, ThemeData theme) {
     return FlutterMap(
       mapController: _mapController,
       options: MapOptions(
-        initialCenter:
-        tripController.currentPosition ?? const LatLng(35.6892, 51.3890),
+        initialCenter: tripController.currentPosition ?? const LatLng(35.6892, 51.3890),
         initialZoom: 16.0,
       ),
       children: [
         TileLayer(
-          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+          urlTemplate: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+          subdomains: const ['a', 'b', 'c', 'd'],
           userAgentPackageName: 'ir.arcaneteam.rahban',
         ),
         if (tripController.currentPosition != null)
@@ -147,10 +166,9 @@ class _HomeScreenState extends State<HomeScreen> {
             markers: [
               Marker(
                 point: tripController.currentPosition!,
-                width: 80,
-                height: 80,
-                child:
-                const Icon(Icons.my_location, color: Colors.blue, size: 30),
+                width: 48,
+                height: 48,
+                child: Icon(Icons.my_location, color: theme.colorScheme.primary, size: 32),
               ),
             ],
           ),
@@ -158,30 +176,36 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildRecenterButton() {
+  Widget _buildRecenterButton(ThemeData theme) {
     return Positioned(
-      bottom: 120, // Adjust position to not overlap with other buttons
+      bottom: 120,
       left: 24,
       child: FloatingActionButton(
         onPressed: _recenterMap,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.teal,
+        backgroundColor: theme.colorScheme.surface,
+        foregroundColor: theme.colorScheme.primary,
+        tooltip: 'بازگرداندن موقعیت',
         child: const Icon(Icons.gps_fixed),
       ),
     );
   }
 
-  Widget _buildLoadingIndicator() {
-    return const Center(
+  Widget _buildLoadingIndicator(ThemeData theme) {
+    return Center(
       child: Card(
+        color: theme.colorScheme.surfaceVariant,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Padding(
-          padding: EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(20.0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              CircularProgressIndicator(),
-              SizedBox(height: 16),
-              Text('در حال بارگذاری...'),
+              CircularProgressIndicator(color: theme.colorScheme.primary),
+              const SizedBox(height: 16),
+              Text(
+                'در حال بارگذاری...',
+                style: theme.textTheme.titleMedium,
+              ),
             ],
           ),
         ),
@@ -192,9 +216,12 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildErrorDisplay(String error) {
     return Center(
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
         margin: const EdgeInsets.all(24),
-        color: Colors.black.withOpacity(0.7),
+        decoration: BoxDecoration(
+          color: Colors.red.shade900.withOpacity(0.85),
+          borderRadius: BorderRadius.circular(16),
+        ),
         child: Text(
           error,
           style: const TextStyle(color: Colors.white, fontSize: 16),
@@ -204,38 +231,42 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildInTripOverlay(TripController tripController) {
+  Widget _buildInTripOverlay(TripController tripController, ThemeData theme) {
     return Positioned(
       bottom: 40,
       left: 24,
       right: 24,
       child: Card(
-        color: Colors.white,
-        elevation: 8,
+        color: theme.colorScheme.surface,
+        elevation: 10,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 12.0),
+          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 14.0),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              // SOS Button
               ElevatedButton.icon(
                 icon: const Icon(Icons.sos),
                 label: const Text('SOS'),
                 onPressed: _triggerSOS,
                 style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red[700],
-                    foregroundColor: Colors.white,
-                    padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12)),
+                  backgroundColor: Colors.red.shade700,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
               ),
-              // End Trip Button
               ElevatedButton(
                 onPressed: () => tripController.completeActiveTrip(),
                 style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.teal[700],
-                    padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12)),
-                child: const Text('پایان سفر'),
+                  backgroundColor: theme.colorScheme.primary,
+                  padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Text(
+                  'پایان سفر',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
               ),
             ],
           ),
@@ -244,8 +275,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildStartTripButton(
-      BuildContext context, LatLng? currentPosition) {
+  Widget _buildStartTripButton(BuildContext context, LatLng? currentPosition, ThemeData theme) {
     return Positioned(
       bottom: 40,
       left: 24,
@@ -254,8 +284,12 @@ class _HomeScreenState extends State<HomeScreen> {
         icon: const Icon(Icons.navigation_outlined),
         label: const Text('شروع سفر جدید'),
         style: ElevatedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 20),
+          padding: const EdgeInsets.symmetric(vertical: 18),
           textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          backgroundColor: theme.colorScheme.primary,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          elevation: 6,
         ),
         onPressed: () => _handleStartTrip(currentPosition),
       ),

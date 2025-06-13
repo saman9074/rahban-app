@@ -47,11 +47,9 @@ class _E2EESetupScreenState extends State<E2EESetupScreen> {
     setState(() => _isSaving = true);
 
     try {
-      // Save the new key permanently, overwriting any existing one.
       final e2eeController = context.read<E2EEController>();
       await e2eeController.generateAndSaveKey(_secureWords);
 
-      // Check if we are in the "start trip" flow or "reset key" flow.
       final extra = GoRouterState.of(context).extra;
       final location = (extra is LatLng) ? extra : null;
 
@@ -60,11 +58,9 @@ class _E2EESetupScreenState extends State<E2EESetupScreen> {
           const SnackBar(content: Text('کلید امنیتی با موفقیت ذخیره شد!')),
         );
         if (location != null) {
-          // Came from "start trip" flow, proceed to the next step.
           context.go('/start-trip', extra: location);
         } else {
-          // Came from "reset key" flow, go back to the previous screen (home).
-          context.pop();
+          context.go('/home');
         }
       }
     } catch (e) {
@@ -83,105 +79,124 @@ class _E2EESetupScreenState extends State<E2EESetupScreen> {
   @override
   Widget build(BuildContext context) {
     final String displayWords = _secureWords.join(' - ');
-    // Check if a key is already set to adjust the title and text.
     final bool isResetting = context.read<E2EEController>().isKeySet;
 
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
         appBar: AppBar(
-            title: Text(isResetting ? 'بازنشانی کلید امنیتی' : 'تنظیم کلید امنیتی'),
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back),
-                onPressed: () {
-                  // بررسی می‌کنیم که آیا صفحه‌ای برای بازگشت در پشته وجود دارد؟
-                  if (context.canPop()) {
-                    // اگر وجود داشت، بازگشت می‌کنیم
-                    context.pop();
-                  } else {
-                    // در غیر این صورت، به صفحه‌ی خانه می‌رویم
-                    context.go('/home');
-                  }
-                }
-            ),
+          title: Text(isResetting ? 'بازنشانی کلید امنیتی' : 'تنظیم کلید امنیتی'),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/home');
+              }
+            },
+          ),
         ),
-
-        body: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Icon(Icons.shield_moon_outlined, color: Colors.teal, size: 80),
-              const SizedBox(height: 24),
-              Text(
-                'کلمات بازیابی جدید شما',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              Card(
-                elevation: 4,
-                color: Colors.teal.shade50,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-                  child: Column(
-                    children: [
-                      Text(
-                        displayWords,
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 2,
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              children: [
+                const Icon(Icons.shield_moon_outlined, color: Colors.teal, size: 80),
+                const SizedBox(height: 24),
+                Text(
+                  'کلمات بازیابی جدید شما',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.teal[800],
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                Card(
+                  elevation: 5,
+                  color: Colors.teal.shade50,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+                    child: Column(
+                      children: [
+                        SelectableText(
+                          displayWords,
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 2,
+                            color: Colors.teal[900],
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                      IconButton(
-                        icon: const Icon(Icons.copy_all_outlined),
-                        onPressed: () {
-                          Clipboard.setData(ClipboardData(text: displayWords));
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('کلمات در کلیپ‌بورد کپی شد.')),
-                          );
-                        },
-                      ),
-                    ],
+                        const SizedBox(height: 16),
+                        ElevatedButton.icon(
+                          icon: const Icon(Icons.copy),
+                          label: const Text('کپی کلمات'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.teal.shade600,
+                            foregroundColor: Colors.white,
+                          ),
+                          onPressed: () {
+                            Clipboard.setData(ClipboardData(text: displayWords));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('کلمات در کلیپ‌بورد کپی شد.')),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                isResetting
-                    ? 'این ۵ کلمه جایگزین کلید قبلی شما می‌شود. آن را در جایی امن یادداشت کنید. کلید قبلی دیگر معتبر نخواهد بود.'
-                    : 'این ۵ کلمه، کلید دائمی شماست. آن را در جایی امن یادداشت کنید. فقط با این کلمات می‌توان موقعیت شما را مشاهده کرد.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 15, height: 1.6, color: Colors.red[700]),
-              ),
-              const SizedBox(height: 24),
-              CheckboxListTile(
-                title: const Text('کلمات را در جایی امن ذخیره کردم.'),
-                value: _hasConfirmed,
-                onChanged: (bool? value) {
-                  setState(() {
-                    _hasConfirmed = value ?? false;
-                  });
-                },
-                controlAffinity: ListTileControlAffinity.leading,
-                activeColor: Colors.teal,
-              ),
-              const Spacer(),
-              _isSaving
-                  ? const Center(child: CircularProgressIndicator())
-                  : ElevatedButton.icon(
-                icon: const Icon(Icons.check_circle_outline),
-                label: const Text('ذخیره و ادامه'),
-                onPressed: _hasConfirmed ? _saveKeyAndProceed : null,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 20),
+                const SizedBox(height: 24),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.red.shade200),
+                  ),
+                  child: Text(
+                    isResetting
+                        ? 'این ۵ کلمه جایگزین کلید قبلی شما می‌شود. آن را در جایی امن یادداشت کنید. کلید قبلی دیگر معتبر نخواهد بود.'
+                        : 'این ۵ کلمه، کلید دائمی شماست. آن را در جایی امن یادداشت کنید. فقط با این کلمات می‌توان موقعیت شما را مشاهده کرد.',
+                    style: const TextStyle(fontSize: 14, height: 1.6, color: Colors.red),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 24),
+                CheckboxListTile(
+                  title: const Text('کلمات را در جایی امن ذخیره کردم.'),
+                  value: _hasConfirmed,
+                  onChanged: (bool? value) {
+                    setState(() {
+                      _hasConfirmed = value ?? false;
+                    });
+                  },
+                  controlAffinity: ListTileControlAffinity.leading,
+                  activeColor: Colors.teal,
+                  contentPadding: EdgeInsets.zero,
+                ),
+                const Spacer(),
+                _isSaving
+                    ? const Center(child: CircularProgressIndicator())
+                    : ElevatedButton.icon(
+                  icon: const Icon(Icons.check_circle_outline),
+                  label: const Text('ذخیره و ادامه'),
+                  onPressed: _hasConfirmed ? _saveKeyAndProceed : null,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    textStyle: const TextStyle(fontSize: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    backgroundColor: Colors.teal,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

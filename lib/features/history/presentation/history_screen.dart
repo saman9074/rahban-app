@@ -22,7 +22,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final a = intl.DateFormat('y/M/d H:m', 'fa');
+    final formatter = intl.DateFormat('y/M/d HH:mm', 'fa');
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
@@ -31,12 +32,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () {
-              // بررسی می‌کنیم که آیا صفحه‌ای برای بازگشت در پشته وجود دارد؟
               if (context.canPop()) {
-                // اگر وجود داشت، بازگشت می‌کنیم
                 context.pop();
               } else {
-                // در غیر این صورت، به صفحه‌ی خانه می‌رویم
                 context.go('/home');
               }
             },
@@ -44,67 +42,109 @@ class _HistoryScreenState extends State<HistoryScreen> {
         ),
         body: Consumer<HistoryController>(
           builder: (context, controller, child) {
-            if (controller.isLoading) return const Center(child: CircularProgressIndicator());
+            if (controller.isLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
             if (controller.errorMessage != null) {
               return Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('خطا در دریافت اطلاعات: ${controller.errorMessage}'),
+                    Icon(Icons.error_outline, size: 80, color: Colors.red.shade400),
                     const SizedBox(height: 16),
-                    ElevatedButton(
+                    Text(
+                      'خطا در دریافت اطلاعات:\n${controller.errorMessage}',
+                      style: const TextStyle(fontSize: 16, color: Colors.red),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton.icon(
                       onPressed: () => controller.fetchTrips(),
-                      child: const Text('تلاش مجدد'),
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('تلاش مجدد'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.teal,
+                        foregroundColor: Colors.white,
+                      ),
                     )
                   ],
                 ),
               );
             }
+
             if (controller.trips.isEmpty) {
               return const Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.history_toggle_off, size: 80, color: Colors.grey),
+                    Icon(Icons.history_toggle_off, size: 90, color: Colors.grey),
                     SizedBox(height: 16),
                     Text('هیچ سفری یافت نشد.', style: TextStyle(fontSize: 18, color: Colors.grey)),
                   ],
                 ),
               );
             }
+
             return RefreshIndicator(
               onRefresh: () => controller.fetchTrips(),
               child: ListView.builder(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.symmetric(vertical: 16),
                 itemCount: controller.trips.length,
                 itemBuilder: (context, index) {
                   final trip = controller.trips[index];
+
                   IconData statusIcon;
                   Color statusColor;
                   String statusText;
+
                   switch (trip.status) {
                     case 'completed':
-                      statusIcon = Icons.check_circle_outline;
-                      statusColor = Colors.green;
+                      statusIcon = Icons.check_circle;
+                      statusColor = Colors.green.shade600;
                       statusText = 'تکمیل شده';
                       break;
                     case 'sos':
                     case 'emergency':
                       statusIcon = Icons.warning_amber_rounded;
-                      statusColor = Colors.red;
+                      statusColor = Colors.red.shade600;
                       statusText = 'اضطراری';
                       break;
                     default:
-                      statusIcon = Icons.hourglass_empty_rounded;
-                      statusColor = Colors.orange;
+                      statusIcon = Icons.timelapse;
+                      statusColor = Colors.orange.shade700;
                       statusText = 'در حال انجام';
                   }
+
                   return Card(
+                    elevation: 3,
                     margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     child: ListTile(
-                      leading: Icon(statusIcon, color: statusColor, size: 40),
-                      title: Text('سفر #${trip.id} - $statusText'),
-                      subtitle: Text('آغاز: ${a.format(trip.createdAt.toLocal())}'),
-                      onTap: () {},
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      leading: CircleAvatar(
+                        backgroundColor: statusColor.withOpacity(0.1),
+                        child: Icon(statusIcon, color: statusColor),
+                      ),
+                      title: Text(
+                        'سفر #${trip.id}',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 4),
+                          Text('وضعیت: $statusText', style: TextStyle(color: statusColor)),
+                          const SizedBox(height: 2),
+                          Text('زمان آغاز: ${formatter.format(trip.createdAt.toLocal())}'),
+                        ],
+                      ),
+                      onTap: () {
+                        // عمل خاصی در صورت نیاز می‌توان اضافه کرد
+                      },
                     ),
                   );
                 },

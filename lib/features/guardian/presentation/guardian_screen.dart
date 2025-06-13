@@ -35,12 +35,19 @@ class _GuardianScreenState extends State<GuardianScreen> {
             children: [
               TextFormField(
                 controller: nameController,
-                decoration: const InputDecoration(labelText: 'نام'),
+                decoration: const InputDecoration(
+                  labelText: 'نام',
+                  border: OutlineInputBorder(),
+                ),
                 validator: (v) => v!.isEmpty ? 'نام الزامی است' : null,
               ),
+              const SizedBox(height: 12),
               TextFormField(
                 controller: phoneController,
-                decoration: const InputDecoration(labelText: 'شماره تلفن'),
+                decoration: const InputDecoration(
+                  labelText: 'شماره تلفن',
+                  border: OutlineInputBorder(),
+                ),
                 keyboardType: TextInputType.phone,
                 validator: (v) => v!.isEmpty ? 'شماره تلفن الزامی است' : null,
               ),
@@ -48,20 +55,26 @@ class _GuardianScreenState extends State<GuardianScreen> {
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('لغو')),
-          ElevatedButton(
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('لغو'),
+          ),
+          ElevatedButton.icon(
             onPressed: () async {
               if (formKey.currentState!.validate()) {
                 final success = await context.read<GuardianController>().addGuardian(
                   name: nameController.text,
                   phoneNumber: phoneController.text,
                 );
-                if (mounted && success) {
-                  Navigator.of(context).pop();
-                }
+                if (mounted && success) Navigator.of(context).pop();
               }
             },
-            child: const Text('افزودن'),
+            icon: const Icon(Icons.person_add),
+            label: const Text('افزودن'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.teal,
+              foregroundColor: Colors.white,
+            ),
           ),
         ],
       ),
@@ -78,12 +91,9 @@ class _GuardianScreenState extends State<GuardianScreen> {
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () {
-              // بررسی می‌کنیم که آیا صفحه‌ای برای بازگشت در پشته وجود دارد؟
               if (context.canPop()) {
-                // اگر وجود داشت، بازگشت می‌کنیم
                 context.pop();
               } else {
-                // در غیر این صورت، به صفحه‌ی خانه می‌رویم
                 context.go('/home');
               }
             },
@@ -91,44 +101,75 @@ class _GuardianScreenState extends State<GuardianScreen> {
         ),
         body: Consumer<GuardianController>(
           builder: (context, controller, child) {
-            if (controller.isLoading) return const Center(child: CircularProgressIndicator());
-            if (controller.errorMessage != null) return Center(child: Text('خطا: ${controller.errorMessage}'));
+            if (controller.isLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            if (controller.errorMessage != null) {
+              return Center(
+                child: Text(
+                  'خطا: ${controller.errorMessage}',
+                  style: const TextStyle(color: Colors.red),
+                ),
+              );
+            }
+
             if (controller.guardians.isEmpty) {
               return const Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.people_outline, size: 80, color: Colors.grey),
+                    Icon(Icons.people_outline, size: 90, color: Colors.grey),
                     SizedBox(height: 16),
-                    Text('هنوز نگهبانی اضافه نکرده‌اید.', style: TextStyle(fontSize: 18, color: Colors.grey)),
+                    Text(
+                      'هنوز نگهبانی اضافه نکرده‌اید.',
+                      style: TextStyle(fontSize: 18, color: Colors.grey),
+                    ),
                   ],
                 ),
               );
             }
+
             return ListView.builder(
+              padding: const EdgeInsets.symmetric(vertical: 12),
               itemCount: controller.guardians.length,
               itemBuilder: (context, index) {
                 final guardian = controller.guardians[index];
+
                 return Card(
                   margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  elevation: 2,
                   child: ListTile(
-                    leading: const Icon(Icons.person, size: 40),
-                    title: Text(guardian.name),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    leading: const CircleAvatar(
+                      radius: 24,
+                      child: Icon(Icons.person),
+                    ),
+                    title: Text(
+                      guardian.name,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
                     subtitle: Text(guardian.phoneNumber),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        IconButton(
-                          icon: Icon(
-                            guardian.isDefault ? Icons.star : Icons.star_border,
-                            color: guardian.isDefault ? Colors.amber : Colors.grey,
+                        Tooltip(
+                          message: 'تنظیم به عنوان پیش‌فرض',
+                          child: IconButton(
+                            icon: Icon(
+                              guardian.isDefault ? Icons.star : Icons.star_border,
+                              color: guardian.isDefault ? Colors.amber : Colors.grey,
+                            ),
+                            onPressed: () => controller.setDefault(guardian.id),
                           ),
-                          tooltip: 'تنظیم به عنوان پیش‌فرض',
-                          onPressed: () => controller.setDefault(guardian.id),
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.delete_outline, color: Colors.red),
-                          onPressed: () => controller.deleteGuardian(guardian.id),
+                        Tooltip(
+                          message: 'حذف نگهبان',
+                          child: IconButton(
+                            icon: const Icon(Icons.delete_outline, color: Colors.red),
+                            onPressed: () => controller.deleteGuardian(guardian.id),
+                          ),
                         ),
                       ],
                     ),
@@ -138,9 +179,10 @@ class _GuardianScreenState extends State<GuardianScreen> {
             );
           },
         ),
-        floatingActionButton: FloatingActionButton(
+        floatingActionButton: FloatingActionButton.extended(
           onPressed: _showAddGuardianDialog,
-          child: const Icon(Icons.add),
+          icon: const Icon(Icons.person_add_alt_1),
+          label: const Text('نگهبان جدید'),
         ),
       ),
     );

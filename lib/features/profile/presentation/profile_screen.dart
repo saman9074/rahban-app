@@ -62,12 +62,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () {
-              // بررسی می‌کنیم که آیا صفحه‌ای برای بازگشت در پشته وجود دارد؟
               if (context.canPop()) {
-                // اگر وجود داشت، بازگشت می‌کنیم
                 context.pop();
               } else {
-                // در غیر این صورت، به صفحه‌ی خانه می‌رویم
                 context.go('/home');
               }
             },
@@ -75,31 +72,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         body: Consumer<ProfileController>(
           builder: (context, controller, child) {
-            if (controller.isLoading) return const Center(child: CircularProgressIndicator());
-            if (controller.errorMessage != null) return Center(child: Text('خطا: ${controller.errorMessage}'));
-            if (controller.user == null) return const Center(child: Text('اطلاعات کاربری یافت نشد.'));
+            if (controller.isLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (controller.errorMessage != null) {
+              return Center(child: Text('❌ خطا: ${controller.errorMessage}'));
+            }
+            if (controller.user == null) {
+              return const Center(child: Text('اطلاعات کاربری یافت نشد.'));
+            }
 
             final user = controller.user!;
             return ListView(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(20.0),
               children: [
                 Card(
+                  elevation: 3,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   child: Padding(
-                    padding: const EdgeInsets.all(8.0),
+                    padding: const EdgeInsets.all(16.0),
                     child: Column(
                       children: [
                         ListTile(
-                          leading: const Icon(Icons.person_outline),
-                          title: Text(user.name),
+                          leading: const Icon(Icons.person_outline, color: Colors.teal),
+                          title: Text(user.name, style: const TextStyle(fontWeight: FontWeight.bold)),
                           subtitle: const Text('نام'),
                         ),
+                        const Divider(),
                         ListTile(
-                          leading: const Icon(Icons.email_outlined),
+                          leading: const Icon(Icons.email_outlined, color: Colors.teal),
                           title: Text(user.email),
                           subtitle: const Text('ایمیل'),
                         ),
+                        const Divider(),
                         ListTile(
-                          leading: const Icon(Icons.phone_outlined),
+                          leading: const Icon(Icons.phone_outlined, color: Colors.teal),
                           title: Text(user.phoneNumber),
                           subtitle: const Text('شماره تلفن'),
                         ),
@@ -107,27 +114,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 32),
+                Text('تغییر رمز عبور',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 12),
                 Card(
+                  elevation: 3,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   child: Padding(
-                    padding: const EdgeInsets.all(16.0),
+                    padding: const EdgeInsets.all(20.0),
                     child: Form(
                       key: _formKey,
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('تغییر رمز عبور', style: Theme.of(context).textTheme.titleLarge),
-                          const SizedBox(height: 16),
                           TextFormField(
                             controller: _currentPasswordController,
-                            decoration: const InputDecoration(labelText: 'رمز عبور فعلی'),
+                            decoration: const InputDecoration(
+                              labelText: 'رمز عبور فعلی',
+                              prefixIcon: Icon(Icons.lock_outline),
+                            ),
                             obscureText: true,
                             validator: (v) => v!.isEmpty ? 'این فیلد الزامی است' : null,
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 16),
                           TextFormField(
                             controller: _newPasswordController,
-                            decoration: const InputDecoration(labelText: 'رمز عبور جدید'),
+                            decoration: const InputDecoration(
+                              labelText: 'رمز عبور جدید',
+                              prefixIcon: Icon(Icons.lock),
+                            ),
                             obscureText: true,
                             validator: (v) {
                               if (v == null || v.isEmpty) return 'این فیلد الزامی است';
@@ -135,10 +150,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               return null;
                             },
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 16),
                           TextFormField(
                             controller: _confirmPasswordController,
-                            decoration: const InputDecoration(labelText: 'تکرار رمز عبور جدید'),
+                            decoration: const InputDecoration(
+                              labelText: 'تکرار رمز عبور جدید',
+                              prefixIcon: Icon(Icons.lock_reset),
+                            ),
                             obscureText: true,
                             validator: (v) {
                               if (v != _newPasswordController.text) return 'رمزهای عبور یکسان نیستند';
@@ -150,9 +168,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ? const Center(child: CircularProgressIndicator())
                               : SizedBox(
                             width: double.infinity,
-                            child: ElevatedButton(
+                            child: ElevatedButton.icon(
+                              icon: const Icon(Icons.save),
+                              label: const Text('ثبت تغییرات'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.teal,
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
                               onPressed: _changePassword,
-                              child: const Text('ثبت تغییرات'),
                             ),
                           ),
                         ],
