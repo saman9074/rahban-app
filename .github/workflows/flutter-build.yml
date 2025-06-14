@@ -55,6 +55,9 @@ jobs:
       - name: Generate Launcher Icons
         run: flutter pub run flutter_launcher_icons
 
+      - name: Generate code (build_runner)
+        run: dart run build_runner build --delete-conflicting-outputs
+
       - name: 📌 Set Version from Commit Message
         run: |
           echo "📦 Checking for version in commit message..."

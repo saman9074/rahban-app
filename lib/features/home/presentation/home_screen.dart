@@ -51,21 +51,18 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _handleSOSActivation() {
-    if (mounted && context.read<TripController>().isInTrip) {
-      _triggerSOS();
+    final tripController = context.read<TripController>();
+    if (mounted && tripController.isInTrip) {
+      tripController.activateEmergencyMode();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('وضعیت اضطراری (SOS) فعال شد!'),
+          backgroundColor: Colors.red.shade800,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
     }
-  }
-
-  void _triggerSOS() {
-    context.read<TripController>().triggerSOS();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('وضعیت اضطراری (SOS) فعال شد!'),
-        backgroundColor: Colors.red.shade800,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
   }
 
   void _recenterMap() {
@@ -232,12 +229,14 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildInTripOverlay(TripController tripController, ThemeData theme) {
+    final isEmergency = tripController.tripStatus == TripStatus.emergency;
+
     return Positioned(
       bottom: 40,
       left: 24,
       right: 24,
       child: Card(
-        color: theme.colorScheme.surface,
+        color: isEmergency ? Colors.red.shade800 : theme.colorScheme.surface,
         elevation: 10,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: Padding(
@@ -245,27 +244,33 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              ElevatedButton.icon(
-                icon: const Icon(Icons.sos),
-                label: const Text('SOS'),
-                onPressed: _triggerSOS,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red.shade700,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              Expanded(
+                child: ElevatedButton.icon(
+                  icon: Icon(isEmergency ? Icons.warning_amber : Icons.sos),
+                  label: Text(isEmergency ? 'حالت اضطراری' : 'SOS'),
+                  onPressed: isEmergency ? null : _handleSOSActivation,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isEmergency ? Colors.white : Colors.red.shade700,
+                    foregroundColor: isEmergency ? Colors.red.shade700 : Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
                 ),
               ),
-              ElevatedButton(
-                onPressed: () => tripController.completeActiveTrip(),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: theme.colorScheme.primary,
-                  padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                child: const Text(
-                  'پایان سفر',
-                  style: TextStyle(fontWeight: FontWeight.bold),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () => tripController.completeActiveTrip(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isEmergency ? Colors.white.withOpacity(0.9) : theme.colorScheme.primary,
+                    foregroundColor: isEmergency ? theme.colorScheme.primary : Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text(
+                    'پایان سفر',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
             ],

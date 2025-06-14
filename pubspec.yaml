@@ -48,6 +48,20 @@ dependencies:
   camera: ^0.11.0+2
   encrypt: ^5.0.3
   crypto: ^3.0.3
+
+  # ---------- [ADDED] For Environmental Data in SOS Mode ----------
+  another_telephony: ^0.4.1 # To get cell tower information
+  wifi_scan: ^0.4.1+2       # To get nearby WiFi networks
+  # ----------------------------------------------------------------
+  # ---------- [ADDED] For Background Service, Offline Storage & Connectivity ----------
+  flutter_background_service: ^5.0.1 # For foreground service
+  hive: ^2.2.3                        # Database for offline storage
+  hive_flutter: ^1.1.0                # Flutter helpers for Hive
+  path_provider: ^2.1.3               # To find correct local path
+  connectivity_plus: ^6.0.3           # To check network status
+  # ---------------------------------------------------------------------------------
+
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -59,6 +73,10 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.13.1
+  # ---------- [ADDED] For Hive code generation ----------
+  hive_generator: ^2.0.1
+  build_runner: ^2.4.10
+  # ----------------------------------------------------
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 

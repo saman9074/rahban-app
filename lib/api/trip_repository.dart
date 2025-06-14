@@ -54,17 +54,25 @@ class TripRepository {
     return data.map((tripJson) => Trip.fromJson(tripJson)).toList();
   }
 
-  /// Updates the location for an ongoing trip.
+  /// Updates the location for an ongoing trip in NORMAL mode.
   ///
   /// The backend route expects a JSON body like: `{"data": "encrypted_string"}`
   Future<Response> updateLocation({required String tripId, required String encryptedData}) async {
     return await _dio.post('/trips/$tripId/location', data: {'data': encryptedData});
   }
 
+  /// [NEW] Sends an environmental data packet for a trip in EMERGENCY mode.
+  ///
+  /// The backend route expects a JSON body like: `{"data": "encrypted_string"}`
+  Future<Response> sendSosData({required String tripId, required String encryptedData}) async {
+    return await _dio.post('/trips/$tripId/sos-data', data: {'data': encryptedData});
+  }
+
   Future<Response> completeTrip({required String tripId}) async {
     return await _dio.post('/trips/$tripId/complete');
   }
 
+  /// This sends an initial alert to backend that trip is now in SOS.
   Future<Response> triggerSOS({required String tripId}) async {
     return await _dio.post('/trips/$tripId/sos');
   }
