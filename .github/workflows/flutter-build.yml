@@ -3,10 +3,11 @@ name: Flutter Build
 on:
   push:
     branches:
-      - main
+      - '**'     # همه‌ی برنچ‌ها
   pull_request:
     branches:
-      - main
+      - main     # برای زمانی که PR به main ساخته می‌شه
+
 
 jobs:
   build:
