@@ -37,7 +37,7 @@ class MainActivity: FlutterActivity() {
         }
     }
 
-    private fun getCellInfoMap(): Map<String, Any>? {
+    private fun getCellInfoMap(): Map<String, Any?>? {
         val telephonyManager = getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
         val allCellInfo = telephonyManager.allCellInfo ?: return null
 
@@ -45,16 +45,15 @@ class MainActivity: FlutterActivity() {
             return null
         }
 
-        // Find the cell that the device is registered to
         val primaryCell = allCellInfo.firstOrNull { it.isRegistered } ?: allCellInfo.first()
 
         return when (primaryCell) {
             is CellInfoLte -> {
                 val cellIdentity = primaryCell.cellIdentity
-                // Use mccString and mncString for modern Android versions
                 val mcc = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) cellIdentity.mccString else cellIdentity.mcc.toString()
                 val mnc = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) cellIdentity.mncString else cellIdentity.mnc.toString()
-                mapOf(
+                // Explicitly define the map type here
+                mapOf<String, Any?>(
                     "id" to cellIdentity.ci,
                     "lac" to cellIdentity.tac,
                     "mcc" to mcc,
@@ -65,7 +64,8 @@ class MainActivity: FlutterActivity() {
                 val cellIdentity = primaryCell.cellIdentity
                 val mcc = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) cellIdentity.mccString else cellIdentity.mcc.toString()
                 val mnc = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) cellIdentity.mncString else cellIdentity.mnc.toString()
-                mapOf(
+                // Explicitly define the map type here
+                mapOf<String, Any?>(
                     "id" to cellIdentity.cid,
                     "lac" to cellIdentity.lac,
                     "mcc" to mcc,
@@ -76,7 +76,8 @@ class MainActivity: FlutterActivity() {
                 val cellIdentity = primaryCell.cellIdentity
                 val mcc = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) cellIdentity.mccString else cellIdentity.mcc.toString()
                 val mnc = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) cellIdentity.mncString else cellIdentity.mnc.toString()
-                mapOf(
+                // Explicitly define the map type here
+                mapOf<String, Any?>(
                     "id" to cellIdentity.cid,
                     "lac" to cellIdentity.lac,
                     "mcc" to mcc,
