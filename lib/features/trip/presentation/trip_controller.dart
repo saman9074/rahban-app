@@ -18,12 +18,16 @@ class TripController with ChangeNotifier {
   final _backgroundService = FlutterBackgroundService();
 
   TripController(this._tripRepository, this._e2eeController) {
-    loadActiveTrip();
+
     if (!kIsWeb) {
       // متدهای جا افتاده در اینجا فراخوانی می شوند
+      loadActiveTrip();
       _checkInitialLocationStatus();
       _listenToLocationService();
       _listenToNetworkChanges();
+    } else {
+      // برای وب، حالت لودینگ را غیرفعال می‌کنیم
+      notifyListeners();
     }
   }
 
@@ -71,6 +75,7 @@ class TripController with ChangeNotifier {
   }
 
   void _configureAndStartService() {
+    if (kIsWeb) return; // <<<< شرط اضافه شد
     _backgroundService.startService();
     _backgroundService.invoke('configure', {
       'tripId': _activeTripId,
@@ -91,6 +96,7 @@ class TripController with ChangeNotifier {
   }
 
   Future<void> completeActiveTrip() async {
+    if (kIsWeb) return; // <<<< شرط اضافه شد
     if (_activeTripId == null) return;
     try {
       await _tripRepository.completeTrip(tripId: _activeTripId!);
@@ -109,6 +115,7 @@ class TripController with ChangeNotifier {
   }
 
   Future<void> activateEmergencyMode() async {
+    if (kIsWeb) return; // <<<< شرط اضافه شد
     if (!isInTrip || _tripStatus == TripStatus.emergency) return;
     try {
       await _tripRepository.triggerSOS(tripId: _activeTripId!);
@@ -124,6 +131,7 @@ class TripController with ChangeNotifier {
   }
 
   void _updateNotification() {
+    if (kIsWeb) return; // <<<< شرط اضافه شد
     FlutterBackgroundService().invoke('update_notification', {
       'title': 'رهبان در حال محافظت از شماست',
       'content': _tripStatus == TripStatus.emergency
@@ -178,6 +186,7 @@ class TripController with ChangeNotifier {
   }
 
   Future<void> initializeLocationService() async {
+    if (kIsWeb) return; // <<<< شرط اضافه شد
     _isLocationLoading = true;
     _locationError = '';
     notifyListeners();
