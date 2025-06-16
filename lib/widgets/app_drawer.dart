@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:rahban/features/auth/presentation/auth_controller.dart';
 import 'package:rahban/features/profile/presentation/profile_controller.dart';
+import 'package:rahban/features/auth/presentation/auth_controller.dart';
+import 'package:rahban/features/profile/presentation/profile_controller.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -77,6 +79,23 @@ class AppDrawer extends StatelessWidget {
               icon: Icons.person_outline,
               text: 'پروفایل',
               route: '/profile',
+            ),
+            const Divider(), // Divider to separate main items from others
+            ListTile(
+              leading: const Icon(Icons.info_outline),
+              title: const Text('درباره ما'),
+              onTap: () {
+                context.pop();
+                context.push('/about');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.contact_support_outlined),
+              title: const Text('ارتباط با ما'),
+              onTap: () {
+                context.pop();
+                context.push('/contact');
+              },
             ),
             const Divider(height: 32, thickness: 1),
             ListTile(

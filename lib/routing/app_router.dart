@@ -10,6 +10,8 @@ import 'package:rahban/features/profile/presentation/profile_screen.dart';
 import 'package:rahban/features/security/presentation/e2ee_setup_screen.dart'; // NEW
 import 'package:rahban/features/splash/splash_screen.dart';
 import 'package:rahban/features/trip/presentation/start_trip_screen.dart';
+import 'package:rahban/features/about/presentation/about_us_screen.dart';
+import 'package:rahban/features/contact/presentation/contact_us_screen.dart';
 
 class AppRouter {
   final AuthController authController;
@@ -29,6 +31,8 @@ class AppRouter {
         routes: [
           GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
           GoRoute(path: '/profile', builder: (context, state) => const ProfileScreen()),
+          GoRoute(path: '/about', builder: (context, state) => const AboutUsScreen()),
+          GoRoute(path: '/contact',builder: (context, state) => const ContactUsScreen()),
           GoRoute(path: '/guardians', builder: (context, state) => const GuardianScreen()),
           GoRoute(path: '/history', builder: (context, state) => const HistoryScreen()),
 

@@ -48,7 +48,7 @@ dependencies:
   camera: ^0.11.0+2
   encrypt: ^5.0.3
   crypto: ^3.0.3
-
+  url_launcher: ^6.3.1
   # ---------- [ADDED] For Environmental Data in SOS Mode ----------
   another_telephony: ^0.4.1 # To get cell tower information
   wifi_scan: ^0.4.1+2       # To get nearby WiFi networks
